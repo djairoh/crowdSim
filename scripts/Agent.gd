@@ -32,9 +32,9 @@ func request_path(goal: Vector2):
 	# FIXME (high priority): this is using the wrong map, or its unintialized, or **something**
 	# as in, we see no paths ://
 
-	if not current_path.is_empty():
-		current_path_index = 0
-		current_path_point = current_path[0]
+	#if not current_path.is_empty():
+		#current_path_index = 0
+		#current_path_point = current_path[0]
 
 
 
@@ -51,57 +51,57 @@ func _physics_process(delta):
 	# TODO: include social forces
 	move_and_slide()
 
-	queue_redraw()
+	#queue_redraw()
 	return
 
 
-	if current_path.is_empty():
-		velocity = Vector2.ZERO
-		return
+	#if current_path.is_empty():
+		#velocity = Vector2.ZERO
+		#return
+#
+	## check if we've reached our interim target yet
+	#if global_transform.origin.distance_to(current_path_point) < 10.0:
+		#current_path_index += 1
+		#if current_path_index >= current_path.size():
+			#current_path = []
+			#current_path_index = 0
+			#current_path_point = global_transform.origin
+			#return
+#
+	#current_path_point = current_path[current_path_index]
+	## get nearby agents from crowd manager
+	#var nearby_agents = crowd_manager.get_nearby_agents(global_position, 100.0, self) if crowd_manager else []
+	## FIXME: this is deprecated now, figure out something to get our custom obstacles to play nice with godots inbuilt collision
+	#var nearby_obstacles = crowd_manager.get_nearby_obstacles(global_position, 100.0) if crowd_manager else []
+#
+	## social forces
+	#var forces = social_forces.calculate_total_force(
+		#global_position,
+		#current_path_point,
+		#nearby_agents,
+		#nearby_obstacles,
+		#movement_speed
+	#)
+#
+	#var movement_delta = movement_speed * delta
+	#var new_velocity = forces * 0.01 * movement_delta
+	## var new_velocity = global_transform.origin.direction_to(current_path_point) * movement_delta
+	#global_transform.origin = global_transform.origin.move_toward(global_transform.origin + new_velocity, movement_delta)
 
-	# check if we've reached our interim target yet
-	if global_transform.origin.distance_to(current_path_point) < 10.0:
-		current_path_index += 1
-		if current_path_index >= current_path.size():
-			current_path = []
-			current_path_index = 0
-			current_path_point = global_transform.origin
-			return
-
-	current_path_point = current_path[current_path_index]
-	# get nearby agents from crowd manager
-	var nearby_agents = crowd_manager.get_nearby_agents(global_position, 100.0, self) if crowd_manager else []
-	# FIXME: this is deprecated now, figure out something to get our custom obstacles to play nice with godots inbuilt collision
-	var nearby_obstacles = crowd_manager.get_nearby_obstacles(global_position, 100.0) if crowd_manager else []
-
-	# social forces
-	var forces = social_forces.calculate_total_force(
-		global_position,
-		current_path_point,
-		nearby_agents,
-		nearby_obstacles,
-		movement_speed
-	)
-
-	var movement_delta = movement_speed * delta
-	var new_velocity = forces * 0.01 * movement_delta
-	# var new_velocity = global_transform.origin.direction_to(current_path_point) * movement_delta
-	global_transform.origin = global_transform.origin.move_toward(global_transform.origin + new_velocity, movement_delta)
-
-	queue_redraw()
+	#queue_redraw()
 
 
 
-func _draw():
-	if current_path.size() > 0:
-		# draw path
-		for i in range(current_path.size() - 1):
-			draw_line(current_path[i] - global_position, current_path[i + 1] - global_position, Color.YELLOW, 1.0)
-
-		# draw progress on path
-		if current_path_index < current_path.size():
-			draw_circle(current_path[current_path_index] - global_position, 5, Color.RED)
-
-	# draw forces
-	# TODO: make these draw individual forces instead of the total velocity
-	draw_line(Vector2(0,0), velocity.normalized() * 20, Color.GREEN)
+#func _draw():
+	#if current_path.size() > 0:
+		## draw path
+		#for i in range(current_path.size() - 1):
+			#draw_line(current_path[i] - global_position, current_path[i + 1] - global_position, Color.YELLOW, 1.0)
+#
+		## draw progress on path
+		#if current_path_index < current_path.size():
+			#draw_circle(current_path[current_path_index] - global_position, 5, Color.RED)
+#
+	## draw forces
+	## TODO: make these draw individual forces instead of the total velocity
+	#draw_line(Vector2(0,0), velocity.normalized() * 20, Color.GREEN)
