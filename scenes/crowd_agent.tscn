@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dxasv7tcpo75w"]
+
+[ext_resource type="Script" uid="uid://blthnj4s1sbty" path="res://scripts/Agent.gd" id="1_ptrki"]
+[ext_resource type="Texture2D" uid="uid://cityckkmrdadx" path="res://assets/human.png" id="2_w8vvl"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
+
+[node name="Agent" type="CharacterBody2D" unique_id=603397563]
+script = ExtResource("1_ptrki")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1047091476]
+shape = SubResource("CircleShape2D_utciu")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1262027492]
+position = Vector2(-3.2782555e-07, -2.3841858e-07)
+scale = Vector2(1.125, 1.125)
+texture = ExtResource("2_w8vvl")
+
+[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=37287173]

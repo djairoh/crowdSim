@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://37eitlkio1jt"]
+
+[ext_resource type="Script" uid="uid://bmn3swhh128pg" path="res://scripts/CrowdManager.gd" id="1_pyr1s"]
+[ext_resource type="PackedScene" uid="uid://btjvo4a8pdby5" path="res://scenes/test_level.tscn" id="2_ikxhy"]
+[ext_resource type="Script" uid="uid://sddjjqha0rpt" path="res://scripts/camera.gd" id="2_y2edp"]
+
+[node name="CrowdManager" type="Node2D" unique_id=1329783422]
+script = ExtResource("1_pyr1s")
+
+[node name="level" parent="." unique_id=820105770 instance=ExtResource("2_ikxhy")]
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=1584936411]
+script = ExtResource("2_y2edp")
