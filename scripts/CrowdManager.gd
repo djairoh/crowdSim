@@ -19,7 +19,6 @@ func _ready():
 		var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
 		agent.global_position = lvl.get_random_spawn()
 		agent.set_crowd_manager(self)
-		agent.set_map(nav_reg.get_navigation_map())
 		add_child(agent)
 		agents.append(agent)
 

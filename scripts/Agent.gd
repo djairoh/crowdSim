@@ -4,35 +4,31 @@ class_name CrowdAgent
 # this class models an individual in a crowd
 # TODO: for debugging, i want to be able to click on an agent and have its path change colour. add that functionality.
 
-# bluhhh many variables here; TODO: check we actually need all that.
 var social_forces: SocialForces
-var current_path: PackedVector2Array
-var current_path_index: int = 0
-var current_path_point: Vector2
 
+@onready var navigation_agent = $NavigationAgent2D
 @onready var collision_shape = $CollisionShape2D
-# THOUGHT: could prolly extract these to a resource
 var movement_speed: float = 4.0
-var recalc_distance: float = 50.0
-var agent_radius: float = 10.0
 # refing to parent nodes like this is bad practice, but who caresssss 
 var crowd_manager: CrowdManager
-var map: RID
 
 func _ready():
 	social_forces = SocialForces.new()
+
+	# TODO: placeholder values; tweak these
+	navigation_agent.path_desired_distance = 5.0
+	navigation_agent.target_desired_distance = 5.0
+	navigation_agent.debug_enabled = true
 
 
 func set_crowd_manager(crowd_manager: CrowdManager):
 	self.crowd_manager = crowd_manager
 	
-func set_map(map: RID):
-	self.map = map
-
-
 func request_path(goal: Vector2):
 	print("agent working towards", goal)
-	current_path = NavigationServer2D.map_get_path(map, global_transform.origin, goal, true)
+	# current_path = NavigationServer2D.map_get_path(map, global_transform.origin, goal, true)
+
+	navigation_agent.target_position = goal
 	# FIXME (high priority): this is using the wrong map, or its unintialized, or **something**
 	# as in, we see no paths ://
 
@@ -44,6 +40,21 @@ func request_path(goal: Vector2):
 
 
 func _physics_process(delta):
+	if navigation_agent.is_navigation_finished():
+		# TODO: select a new goal? or at least condier what we want to happen once a goal is reached 
+		return
+
+	var current_agent_position: Vector2 = global_position
+	var next_path_position: Vector2 = navigation_agent.get_next_path_position()
+
+	velocity = current_agent_position.direction_to(next_path_position) * movement_speed
+	# TODO: include social forces
+	move_and_slide()
+
+	queue_redraw()
+	return
+
+
 	if current_path.is_empty():
 		velocity = Vector2.ZERO
 		return
