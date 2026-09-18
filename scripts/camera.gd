@@ -22,7 +22,7 @@ func _input(event):
 
 func _unhandled_input(event):
 	if event is InputEventMouseButton:
-		if event.get_button_index() == 1:
+		if event.get_button_index() == 3:
 			dragging = event.is_pressed()
 	elif event is InputEventMouseMotion:
 		if dragging:

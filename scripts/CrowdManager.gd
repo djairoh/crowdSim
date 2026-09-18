@@ -15,7 +15,7 @@ func _ready():
 
 
 	# test agents. TODO: better logic for agent spawning/despawning. discuss w Raisa how we want to tackle this.
-	for i in range(2):
+	for i in range(10):
 		var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
 		agent.global_position = lvl.get_random_spawn()
 		agent.set_crowd_manager(self)
@@ -56,3 +56,8 @@ func get_nearby_obstacles(position: Vector2, radius: float) -> Array[Vector2]:
 		if distance < radius:
 			nearby.append(obstacle_pos)
 	return nearby
+	
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+		SelectionManager.deselect()
