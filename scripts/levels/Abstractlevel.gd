@@ -7,14 +7,14 @@ class_name AbstractLevel
 
 var goals: Array
 var spawns: Array
+var spawn_goal_pairs: Dictionary
 @onready var tiles = $TileMapLayer
 
 func _ready() -> void:
 	$NavigationRegion2D.bake_navigation_polygon()
 	goals.append_array(_get_tiles_with_property("is_goal"))
 	spawns.append_array(_get_tiles_with_property("is_spawn"))
-	
-
+		
 func get_random_goal() -> Vector2:
 	# TODO: what if no goals?
 	return goals.pick_random()

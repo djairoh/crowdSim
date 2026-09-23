@@ -1874,6 +1874,7 @@ texture = ExtResource("5_ax1am")
 
 [sub_resource type="TileSet" id="TileSet_tvpnk"]
 physics_layer_0/collision_layer = 1
+physics_layer_0/collision_mask = 3
 terrain_set_0/mode = 0
 terrain_set_0/terrain_0/name = "goal"
 terrain_set_0/terrain_0/color = Color(0.32398987, 0.66288584, 0.15320759, 1)
@@ -1904,6 +1905,8 @@ script = ExtResource("1_wn5fh")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1600575074 groups=["geometry"]]
 tile_set = SubResource("TileSet_tvpnk")
+use_kinematic_bodies = true
+collision_visibility_mode = 2
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=24168955]
 navigation_polygon = SubResource("NavigationPolygon_3c3t5")
