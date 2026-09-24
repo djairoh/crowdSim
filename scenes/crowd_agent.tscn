@@ -2,13 +2,11 @@
 
 [ext_resource type="Script" uid="uid://blthnj4s1sbty" path="res://scripts/Agent.gd" id="1_ptrki"]
 [ext_resource type="Texture2D" uid="uid://cityckkmrdadx" path="res://assets/human.png" id="2_w8vvl"]
+[ext_resource type="Script" uid="uid://d0713vbx6jhyy" path="res://scripts/forces.gd" id="3_xis0x"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
 radius = 6.0
-
-[sub_resource type="SegmentShape2D" id="SegmentShape2D_utciu"]
-b = Vector2(0, 20)
 
 [node name="Agent" type="CharacterBody2D" unique_id=603397563 groups=["agent"]]
 collision_layer = 2
@@ -27,22 +25,10 @@ texture = ExtResource("2_w8vvl")
 shape = SubResource("CircleShape2D_utciu")
 debug_color = Color(0.8368208, 0.36799604, 0.32875565, 0.41960785)
 
-[node name="RecOfInfluence" type="Area2D" parent="." unique_id=410069496]
-collision_layer = 0
-collision_mask = 2
-input_pickable = false
-monitorable = false
+[node name="Forces" type="Node2D" parent="." unique_id=1431331718]
+script = ExtResource("3_xis0x")
 
-[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="RecOfInfluence" unique_id=224673388]
-visible = false
-polygon = PackedVector2Array(-8, -8, -8, 8, 0, 8, 0, 16, 72, 16, 72, -16, 0, -16, 0, -8)
-
-[node name="ShapeCastWalls" type="ShapeCast2D" parent="." unique_id=1427443562]
-position = Vector2(0, -8)
-shape = SubResource("SegmentShape2D_utciu")
-target_position = Vector2(64, 0)
-
-[node name="NavigationAgent2D" type="NavigationAgent2D" parent="." unique_id=37287173]
+[node name="AttractionNavigation" type="NavigationAgent2D" parent="Forces" unique_id=37287173]
 path_desired_distance = 5.0
 target_desired_distance = 5.0
 path_metadata_flags = 0
@@ -51,12 +37,38 @@ neighbor_distance = 50.0
 time_horizon_agents = 0.65
 time_horizon_obstacles = 0.1
 max_speed = 5.0
-debug_enabled = true
+
+[node name="RecOfInfluence" type="Area2D" parent="Forces" unique_id=410069496]
+collision_layer = 0
+collision_mask = 2
+input_pickable = false
+monitorable = false
+
+[node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Forces/RecOfInfluence" unique_id=224673388]
+polygon = PackedVector2Array(-8, -8, -8, 8, 0, 8, 0, 16, 72, 16, 72, -16, 0, -16, 0, -8)
+
+[node name="WallCast" type="Node2D" parent="Forces" unique_id=1265164409]
+
+[node name="left" type="RayCast2D" parent="Forces/WallCast" unique_id=890530243]
+position = Vector2(0, -16)
+target_position = Vector2(72, 0)
+hit_from_inside = true
+
+[node name="front" type="RayCast2D" parent="Forces/WallCast" unique_id=311937257]
+position = Vector2(-8, 0)
+target_position = Vector2(80, 0)
+hit_from_inside = true
+
+[node name="right" type="RayCast2D" parent="Forces/WallCast" unique_id=509660930]
+position = Vector2(0, 16)
+target_position = Vector2(72, 0)
+hit_from_inside = true
 
 [node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
 autostart = true
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
-[connection signal="body_entered" from="RecOfInfluence" to="." method="_on_rec_of_influence_body_entered"]
-[connection signal="body_exited" from="RecOfInfluence" to="." method="_on_rec_of_influence_body_exited"]
+[connection signal="target_reached" from="Forces/AttractionNavigation" to="." method="_on_attraction_navigation_target_reached"]
+[connection signal="body_entered" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_entered"]
+[connection signal="body_exited" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_exited"]
 [connection signal="timeout" from="MoveIdleTimer" to="." method="_on_move_idle_timer_timeout"]

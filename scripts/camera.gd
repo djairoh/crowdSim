@@ -2,15 +2,15 @@ extends Camera2D
 
 # simple movable (zomable, pannable) camera
 
-@export var minZoom := 0.01
-@export var maxZoom := 2.0
+@export var minZoom := 1.0
+@export var maxZoom := 5.0
 @export var zoomFactor := 0.1
 @export var zoomDuration := 0.2
-var zoomLevel: float = 1
+var zoomLevel: float = 2
 var dragging: bool = false
 
 func _ready():
-	pass
+	zoom = Vector2(zoomLevel, zoomLevel)
 
 func _input(event):
 	if event.is_action_pressed("zoomIn"):

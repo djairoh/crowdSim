@@ -19,6 +19,7 @@ func _initialize_agent(agent: CrowdAgent):
 	agent.set_crowd_manager(self)
 	agent.global_position = lvl.get_random_spawn()
 	agent.request_path(lvl.get_random_goal())
+	# FIXME: agent unreachable target logic
 	#while agent.request_path(lvl.get_random_goal()) == false:
 		#print("target unreachable. selecting new one")
 		#agent.global_position = lvl.get_random_spawn()
