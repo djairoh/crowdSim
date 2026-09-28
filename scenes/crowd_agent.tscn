@@ -45,6 +45,7 @@ input_pickable = false
 monitorable = false
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Forces/RecOfInfluence" unique_id=224673388]
+unique_name_in_owner = true
 polygon = PackedVector2Array(-8, -8, -8, 8, 0, 8, 0, 16, 72, 16, 72, -16, 0, -16, 0, -8)
 
 [node name="WallCast" type="Node2D" parent="Forces" unique_id=1265164409]

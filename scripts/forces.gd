@@ -9,6 +9,15 @@ var F_ob: Vector2 = Vector2.ZERO
 var F_ot: Vector2 = Vector2.ZERO
 var F_at: Vector2 = Vector2.ZERO
 
+# rectangle of influence
+#@onready var collision_polygon_2d: CollisionPolygon2D = %CollisionPolygon2D
+#func get_vision_length() -> float:
+	#var polygon: PackedVector2Array = collision_polygon_2d.polygon
+#
+	#if polygon.is_empty():
+		#return 0.0
+	## based on manual inspection.
+	#return 72
 @onready var parent: CrowdAgent = get_parent()
 
 # particulars
@@ -55,6 +64,89 @@ func calculate_wall_avoidance():
 	F_wa = F_wa.normalized()
 	# TODO: the individual components should be modulated by a weight factor w_wa_i. 
 	# The paper does not specify how these are calculated ://
+	
+func calculate_object_avoidance():
+	print("calculating object avoidance...")
+	
+	# avoid visible_obstacles
+	
+func calculate_other_agents_avoidance():
+	print("calculating other agent avoidance")
+	
+	# Reset force
+	F_ot = Vector2.ZERO
+	
+	# Density of the crowd D_i
+	# Agent perceived at any given time
+	# If crowd is dispersed, people look for avoidance from far away and keep 
+	# preferences on right hand side of space (D_i = 3m)
+	# If crowd is dense, right preference is not obvious and biderectional flow
+	# emerge. TODO: How to get perceived density -> Length of rectangle of influence?
+	var D_i: float = 1.5
+	
+	for other_agent in visible_agents:
+		
+		if not is_instance_valid(other_agent):
+			# TODO: Handle invalid instance?
+			print("Invalid agent instance")
+			continue
+		
+		# Vector of current agent to other agent
+		var d_ji: Vector2 =  other_agent.global_position - parent.global_position
+		var v_i: Vector2 = parent.velocity
+		var v_j: Vector2 = other_agent.velocity
+		
+		print("d_ji: " + str(d_ji))
+		
+		
+		# Distance to other agent
+		var distance: float = d_ji.length()
+
+		if distance <= 0.001:
+			continue
+		
+		# Using vector triple product identity
+		# (d_ji × v_i) × d_ji = v_i(d_ji⋅d_ji)−d_ji(v_i⋅d_ji)
+		
+		# (d_ji⋅d_ji) equals to d_ji.length_squared()
+		var tangential_component: Vector2 = v_i * d_ji.length_squared() - d_ji * v_i.dot(d_ji)
+		
+		if tangential_component.length_squared() <= 0.001:
+			continue
+		
+		# Tangential force
+		# Tangential force (t_j) applied - make a curve in trajectory to avoid collisiom
+		# tangential_component / |tangential_component|
+		var t_j: Vector2 = tangential_component.normalized()
+		print("t_j: " + str(t_j))
+		
+		
+		# Direction of other agents relative to agent i desired velocity vector (vi)
+		# Weight due to difference in velocity vectors. Distinguish whether agent j
+		# is moving in the same direction as agent i or against it.
+		# Magnitude will be higher to avoid counter flow
+		var w_o_i: float = 1.2
+		
+		if (v_i.dot(v_j) > 0):
+			w_o_i = 1.2
+		else:
+			w_o_i = 2.4
+		
+		print("w_o_i: " + str(w_o_i))
+		
+		# Ignore agents outside of rectangle of influence
+		if distance >= D_i:
+			continue
+
+		# Weight due to distance between agents, increase as distance between two agents become smaller
+		# agent i trajectory will change more abrubtly as distance to j decrease
+		var w_d_i: float = pow(distance - D_i, 2.0)
+		print("w_d_i: " + str(w_d_i))
+		
+		F_ot += t_j * w_d_i * w_o_i
+		
+	print("F_ot: " + str(F_ot))
+	
 
 func calculate_attraction():
 	# base navigation
@@ -63,6 +155,7 @@ func calculate_attraction():
 func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_wall_avoidance()
+	calculate_other_agents_avoidance()
 	calculate_attraction()
 
 func get_total_force(update: bool = false) -> Vector2:
