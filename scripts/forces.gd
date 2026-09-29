@@ -8,6 +8,11 @@ extends Node
 # 12 / 0.5 = 24 
 const PIXELS_PER_METER: float = 24
 
+# Global force weights. Paper includes these weights but does not provide the value.
+const W_AT: float = 1.0
+const W_WA: float = 1.5
+const W_OT: float = 0.2
+
 # forces
 var F_wa: Vector2 = Vector2.ZERO
 var F_ob: Vector2 = Vector2.ZERO
@@ -35,25 +40,13 @@ func pixels_to_meters(pixels: float) -> float:
 func meters_to_pixels(meters: float) -> float:
 	return meters * PIXELS_PER_METER
 
-func get_forward_vision_size():
-	var shape = forward_vision_collision.shape as RectangleShape2D
-	if shape == null:
-		push_error("Rectangle of influence must use RectangleShape2D")
-		return 0.0
-
-	# RectangleShape2D.size is the FULL width/height.
-	# Choose x or y depending on which local axis is your forward axis.
-	print("X: " + str(shape.size.x))
-	print("Y: " + str(shape.size.y))
-	return shape.size.x
-
 func is_inside_influence_rectangle(other_agent: Node2D) -> bool:
 	var shape :RectangleShape2D = forward_vision_collision.shape as RectangleShape2D
 
 	if shape == null:
 		return false
 
-	var local_position : Vector2= forward_vision_collision.to_local(
+	var local_position : Vector2 = forward_vision_collision.to_local(
 		other_agent.global_position
 	)
 
@@ -63,6 +56,9 @@ func is_inside_influence_rectangle(other_agent: Node2D) -> bool:
 		abs(local_position.x) <= half_size.x
 		and abs(local_position.y) <= half_size.y
 	)
+
+func get_desired_direction() -> Vector2:
+	return 	parent.global_transform.origin.direction_to(f_at_nav.get_next_path_position())
 
 func request_path(goal: Vector2) -> bool:
 	f_at_nav.target_position = goal
@@ -100,7 +96,7 @@ func calculate_wall_avoidance():
 	
 func calculate_object_avoidance():
 	#print("calculating object avoidance...")
-	return 0
+	return
 	
 	
 func calculate_other_agents_avoidance():	
@@ -108,10 +104,15 @@ func calculate_other_agents_avoidance():
 	F_ot = Vector2.ZERO
 	
 	# Density of the crowd D_i: Agent perceived at any given time
-	var D_i: float = pixels_to_meters(get_forward_vision_size())
-	
-	var v_i: Vector2 = parent.velocity
+	var shape = forward_vision_collision.shape as RectangleShape2D
+	if shape == null:
+		push_error("Shape must be RectangleShape2D")
+		return
 
+	var D_i: float = pixels_to_meters(shape.size.x)
+	
+	var v_i: Vector2 = parent.desired_velocity
+	
 	if v_i.length_squared() < 0.0001:
 		return
 	
@@ -130,6 +131,8 @@ func calculate_other_agents_avoidance():
 		if d_ji.length_squared() < 0.0001:
 			continue
 		
+		var v_j: Vector2 = other_agent.desired_velocity
+		
 		# Actual istance between i and j in meters
 		var distance: float = pixels_to_meters(d_ji.length())
 		
@@ -144,22 +147,14 @@ func calculate_other_agents_avoidance():
 		# tangential_component / |tangential_component|
 		var t_j: Vector2
 		
-		# Test actual angular alignment.
-		var alignment : float = abs(v_i.normalized().dot(d_ji.normalized()))
-
-		if alignment > 0.98:
-			# Almost collinear -> right-hand preference.
+		if tangential_component.length_squared() <= 0.0001:
 			t_j = get_right_vector(v_i)
-		elif tangential_component.length_squared() > 0.0001:
-			t_j = tangential_component.normalized()
 		else:
-			continue
-		
+			t_j = tangential_component.normalized()
+
 		# Eq. (9)
 		# Weight due to difference in velocity vectors. 
 		# Distinguish whether agent j is moving in the same direction as agent i or against it.
-		var v_j: Vector2 = other_agent.velocity
-		
 		var w_o_i: float
 		
 		if (v_i.dot(v_j) > 0):
@@ -183,27 +178,27 @@ func get_right_vector(direction: Vector2) -> Vector2:
 
 func calculate_attraction():
 	# base navigation
-	F_at = parent.global_transform.origin.direction_to(f_at_nav.get_next_path_position())
+	F_at = parent.desired_velocity.normalized()
 
 func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
+	calculate_attraction()
 	calculate_wall_avoidance()
 	calculate_other_agents_avoidance()
-	calculate_attraction()
 
 func get_total_force(update: bool = false) -> Vector2:
 	if update:
 		_update_forces()
 	# FIXME: does not apply weights as in the paper.
-	return (F_at + F_wa*1.5 + F_ot + F_ob).normalized()
+	return (F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob).normalized()
 
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
-		parent.draw_line(Vector2(0,0), F_wa*10, Color.GOLDENROD, 1.0)
-		parent.draw_line(Vector2(0,0), F_at*10, Color.SIENNA, 1.0)
+		parent.draw_line(Vector2(0,0), F_wa*W_WA*10, Color.GOLDENROD, 1.0)
+		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 1.0)
 		parent.draw_line(Vector2(0,0), F_ob*10, Color.ORCHID, 1.0)
-		parent.draw_line(Vector2(0,0), F_ot*10, Color.TOMATO, 1.0)
+		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 1.0)
 
 
 func _on_rec_of_influence_body_entered(body: Node2D) -> void:

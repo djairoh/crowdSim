@@ -12,6 +12,7 @@ var crowd_manager: CrowdManager
 var start_position: Vector2
 var goal: Vector2
 var desired_rotation: float = self.rotation
+var desired_velocity: Vector2 = Vector2.ZERO
 
 func _ready():
 	start_position = global_position
@@ -30,6 +31,11 @@ func _process(delta: float) -> void:
 		self.rotation = lerp_angle(self.rotation, self.desired_rotation, clampf(4*delta, 0, 1))
 
 func _physics_process(delta):
+	self.desired_velocity = (
+		forces.get_desired_direction()
+		* movement_speed
+	)
+
 	var f_to = forces.get_total_force(true)
 
 	# TODO: position calculation is not implemented as it is in the paper.
