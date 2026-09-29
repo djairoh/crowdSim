@@ -8,6 +8,9 @@
 resource_local_to_scene = true
 radius = 6.0
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6u5ao"]
+size = Vector2(72, 32)
+
 [node name="Agent" type="CharacterBody2D" unique_id=603397563 groups=["agent"]]
 collision_layer = 2
 collision_mask = 3
@@ -47,6 +50,12 @@ monitorable = false
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Forces/RecOfInfluence" unique_id=224673388]
 unique_name_in_owner = true
 polygon = PackedVector2Array(-8, -8, -8, 8, 0, 8, 0, 16, 72, 16, 72, -16, 0, -16, 0, -8)
+
+[node name="ForwardVisionCollisionShape2D" type="CollisionShape2D" parent="Forces/RecOfInfluence" unique_id=28635057]
+unique_name_in_owner = true
+position = Vector2(36, 0)
+shape = SubResource("RectangleShape2D_6u5ao")
+debug_color = Color(0.9273635, 0.52852875, 1, 0.41960785)
 
 [node name="WallCast" type="Node2D" parent="Forces" unique_id=1265164409]
 
