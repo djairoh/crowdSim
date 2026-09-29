@@ -11,6 +11,7 @@ const PIXELS_PER_METER: float = 24
 # Global force weights. Paper includes these weights but does not provide the value.
 const W_AT: float = 1.0
 const W_WA: float = 1.5
+const W_OB: float = 0.2
 const W_OT: float = 0.2
 
 # forces
@@ -95,20 +96,44 @@ func calculate_wall_avoidance():
 	# The paper does not specify how these are calculated ://
 	
 func calculate_object_avoidance():
-	#print("calculating object avoidance...")
-	return
+	F_ob = Vector2.ZERO
 	
+	var v_i: Vector2 = parent.desired_velocity
+	
+	if v_i.length_squared() < 0.0001:
+		return
+		
+	for obstacle in visible_obstacles:
+		
+		if not is_instance_valid(obstacle):
+			continue
+			
+		# Check the actual rectangle.
+		if not is_inside_influence_rectangle(obstacle):
+			continue
+		
+		# Vector of current agent to obstacle
+		var d_ki: Vector2 =  obstacle.global_position - parent.global_position
+		
+		if d_ki.length_squared() < 0.0001:
+			continue
+	
+		# Eq. (4)
+		# Using vector triple product identity
+		var tangential_component: Vector2 = v_i * d_ki.length_squared() - d_ki * v_i.dot(d_ki)
+		
+		F_ob += tangential_component.normalized()
 	
 func calculate_other_agents_avoidance():	
 	# Reset force
 	F_ot = Vector2.ZERO
 	
-	# Density of the crowd D_i: Agent perceived at any given time
 	var shape = forward_vision_collision.shape as RectangleShape2D
 	if shape == null:
 		push_error("Shape must be RectangleShape2D")
 		return
 
+	# Density of the crowd D_i: Agent perceived at any given time
 	var D_i: float = pixels_to_meters(shape.size.x)
 	
 	var v_i: Vector2 = parent.desired_velocity
@@ -139,8 +164,6 @@ func calculate_other_agents_avoidance():
 		# Eq. (6)
 		# Using vector triple product identity
 		# (d_ji × v_i) × d_ji = v_i(d_ji⋅d_ji)−d_ji(v_i⋅d_ji)
-		
-		# (d_ji⋅d_ji) equals to d_ji.length_squared()
 		var tangential_component: Vector2 = v_i * d_ji.length_squared() - d_ji * v_i.dot(d_ji)
 		
 		# Tangential force (t_j) applied - make a curve in trajectory to avoid collision
@@ -163,8 +186,8 @@ func calculate_other_agents_avoidance():
 			w_o_i = 2.4
 		
 		# Eq. (8)
-		# Weight due to distance between agents, increase as distance between two agents become smaller
-		# agent i trajectory will change more abrubtly as distance to j decrease
+		# Weight due to distance between agents, increase as distance between two agents become 
+		# smaller agent i trajectory will change more abrubtly as distance to j decrease
 		var w_d_i: float = pow(distance - D_i, 2.0)
 		
 		# Eq. (7)
@@ -184,20 +207,21 @@ func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_attraction()
 	calculate_wall_avoidance()
+	calculate_object_avoidance()
 	calculate_other_agents_avoidance()
 
 func get_total_force(update: bool = false) -> Vector2:
 	if update:
 		_update_forces()
 	# FIXME: does not apply weights as in the paper.
-	return (F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob).normalized()
+	return (F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB).normalized()
 
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
 		parent.draw_line(Vector2(0,0), F_wa*W_WA*10, Color.GOLDENROD, 1.0)
 		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 1.0)
-		parent.draw_line(Vector2(0,0), F_ob*10, Color.ORCHID, 1.0)
+		parent.draw_line(Vector2(0,0), F_ob*W_OB*10, Color.ORCHID, 1.0)
 		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 1.0)
 
 
