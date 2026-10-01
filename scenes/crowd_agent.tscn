@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://blthnj4s1sbty" path="res://scripts/Agent.gd" id="1_ptrki"]
 [ext_resource type="Texture2D" uid="uid://cityckkmrdadx" path="res://assets/human.png" id="2_w8vvl"]
 [ext_resource type="Script" uid="uid://d0713vbx6jhyy" path="res://scripts/forces.gd" id="3_xis0x"]
+[ext_resource type="Script" uid="uid://cxwd60an63i7t" path="res://scenes/repulsion.gd" id="4_qt0yl"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -10,6 +11,9 @@ radius = 6.0
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6u5ao"]
 size = Vector2(72, 32)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_6u5ao"]
+radius = 6.0
 
 [node name="Agent" type="CharacterBody2D" unique_id=603397563 groups=["agent"]]
 collision_layer = 2
@@ -74,6 +78,15 @@ position = Vector2(0, 16)
 target_position = Vector2(72, 0)
 hit_from_inside = true
 
+[node name="Repulsion" type="Node2D" parent="." unique_id=1879718809]
+script = ExtResource("4_qt0yl")
+
+[node name="RepulsionArea2D" type="Area2D" parent="Repulsion" unique_id=1319361761]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Repulsion/RepulsionArea2D" unique_id=1061434868]
+shape = SubResource("CircleShape2D_6u5ao")
+debug_color = Color(0.7618129, 0.44940877, 0.1152795, 0.41960785)
+
 [node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
 autostart = true
 
@@ -81,4 +94,6 @@ autostart = true
 [connection signal="target_reached" from="Forces/AttractionNavigation" to="." method="_on_attraction_navigation_target_reached"]
 [connection signal="body_entered" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_entered"]
 [connection signal="body_exited" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_exited"]
+[connection signal="body_entered" from="Repulsion/RepulsionArea2D" to="Repulsion" method="_on_repulsion_area_2d_body_entered"]
+[connection signal="body_exited" from="Repulsion/RepulsionArea2D" to="Repulsion" method="_on_repulsion_area_2d_body_exited"]
 [connection signal="timeout" from="MoveIdleTimer" to="." method="_on_move_idle_timer_timeout"]
