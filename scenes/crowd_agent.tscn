@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://blthnj4s1sbty" path="res://scripts/Agent.gd" id="1_ptrki"]
 [ext_resource type="Texture2D" uid="uid://cityckkmrdadx" path="res://assets/human.png" id="2_w8vvl"]
 [ext_resource type="Script" uid="uid://d0713vbx6jhyy" path="res://scripts/forces.gd" id="3_xis0x"]
-[ext_resource type="Script" uid="uid://cxwd60an63i7t" path="res://scenes/repulsion.gd" id="4_qt0yl"]
+[ext_resource type="Script" uid="uid://cxwd60an63i7t" path="res://scripts/repulsion.gd" id="4_qt0yl"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -17,7 +17,6 @@ radius = 6.0
 
 [node name="Agent" type="CharacterBody2D" unique_id=603397563 groups=["agent"]]
 collision_layer = 2
-collision_mask = 3
 input_pickable = true
 motion_mode = 1
 safe_margin = 3.683
@@ -82,8 +81,11 @@ hit_from_inside = true
 script = ExtResource("4_qt0yl")
 
 [node name="RepulsionArea2D" type="Area2D" parent="Repulsion" unique_id=1319361761]
+collision_layer = 0
+collision_mask = 2
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Repulsion/RepulsionArea2D" unique_id=1061434868]
+unique_name_in_owner = true
 shape = SubResource("CircleShape2D_6u5ao")
 debug_color = Color(0.7618129, 0.44940877, 0.1152795, 0.41960785)
 

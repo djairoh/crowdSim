@@ -192,7 +192,6 @@ func calculate_other_agents_avoidance():
 		
 		# Eq. (7)
 		F_ot += t_j * w_d_i * w_o_i
-
 	
 func get_right_vector(direction: Vector2) -> Vector2:
 	var forward :Vector2 = direction.normalized()

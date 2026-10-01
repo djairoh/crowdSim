@@ -4,7 +4,9 @@ class_name CrowdAgent
 # this class models an individual in a crowd
 
 @onready var forces = $Forces
-@export var movement_speed: float = 32.0
+@onready var repulsion = $Repulsion
+@export var max_speed: float = 32.0
+@export var acceleration: float = 10.0
 @export var max_movement: float = 10
 
 # refing to parent nodes like this is bad practice, but who caresssss 
@@ -13,6 +15,7 @@ var start_position: Vector2
 var goal: Vector2
 var desired_rotation: float = self.rotation
 var desired_velocity: Vector2 = Vector2.ZERO
+var current_speed: float = 0.0
 
 func _ready():
 	start_position = global_position
@@ -33,14 +36,52 @@ func _process(delta: float) -> void:
 func _physics_process(delta):
 	self.desired_velocity = (
 		forces.get_desired_direction()
-		* movement_speed
+		* max_speed
+	)
+	
+	# Eq. (1) + Eq. (2)
+	var f_to = forces.get_total_force(true)
+	
+	# Eq. (10)
+	var r_i = repulsion.get_total_repulsion(true)
+	
+	# α represents whether the agent will move in this step in
+	# its desired direction of movement or instead be pushed
+	# by a repulsion force.
+	var alpha_i: float = 1.0
+	if r_i.length_squared() > 0.0001:
+		alpha_i = 0.0
+		
+	# TODO: CHANGE beta_i to represent falling agents
+	var beta_i: float = 0.0
+	
+	# Update v_i[n].
+	# v_i[n] = min(v_i[n-1] + aT, v_i_MAX)
+	current_speed = min(current_speed + acceleration * delta, max_speed)
+	
+	# Simplified Eq. (3), beta_i = 0
+	# Paper uses equation to get desired position p_i[n+1]
+	# But Godot move_and_slide requires velocity, which is obtained from displacement
+	# So we modify this equation to get the displacement instead
+	# displacement = alpha_i * v_i[n] * f_to * T + r_i
+	var displacement: Vector2 = (
+		alpha_i
+		* current_speed
+		* f_to
+		* delta
+		+ r_i
 	)
 
-	var f_to = forces.get_total_force(true)
-
 	# TODO: position calculation is not implemented as it is in the paper.
-	velocity = f_to * movement_speed
-	self.desired_rotation = atan2(velocity.y, velocity.x)
+	#velocity = f_to * max_speed
+	
+	# Position calculation adapted from the paper
+	velocity = displacement / delta
+	
+	# Only update rotation when moving
+	if velocity.length_squared() > 0.0001:
+		self.desired_rotation = atan2(velocity.y, velocity.x)
+		
 	move_and_slide()
 	queue_redraw()
 	
