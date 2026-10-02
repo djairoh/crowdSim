@@ -9,10 +9,10 @@ extends Node
 const PIXELS_PER_METER: float = 24
 
 # Global force weights. Paper includes these weights but does not provide the value.
-const W_AT: float = 1.0
-const W_WA: float = 1.5
+const W_AT: float = 1.5
+const W_WA: float = 1.0
 const W_OB: float = 0.2
-const W_OT: float = 0.2
+const W_OT: float = 0.5
 
 # forces
 var F_wa: Vector2 = Vector2.ZERO
