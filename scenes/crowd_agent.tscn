@@ -89,6 +89,14 @@ unique_name_in_owner = true
 shape = SubResource("CircleShape2D_6u5ao")
 debug_color = Color(0.7618129, 0.44940877, 0.1152795, 0.41960785)
 
+[node name="WallRepulsionRays" type="Node2D" parent="Repulsion" unique_id=615954117]
+
+[node name="right" type="RayCast2D" parent="Repulsion/WallRepulsionRays" unique_id=1692435533]
+unique_name_in_owner = true
+modulate = Color(0.95237595, 0.09709505, 0.7868967, 1)
+target_position = Vector2(6, 0)
+hit_from_inside = true
+
 [node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
 autostart = true
 

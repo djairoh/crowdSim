@@ -14,11 +14,12 @@ var F_r_ot: Vector2 = Vector2.ZERO
 
 @onready var parent: CrowdAgent = get_parent()
 @onready var repulsion_collision: CollisionShape2D = %CollisionShape2D
+@onready var wall_ray_right: RayCast2D = %right
 
 # Agent's Repulsion Area collision box radius currently set to the same size as Agent radius
 # Agent's personal space (ε_i)
 # ε_i
-@export var personal_space: float = 0.0:
+@export var personal_space: float = 4.0:
 	set(value):
 		personal_space = max(value, 0.0)
 
@@ -32,6 +33,7 @@ var overlapping_agents: Dictionary = {}
 
 func _ready() -> void:
 	_update_repulsion_area()
+	_update_wall_ray_length()
 
 # Update agent repulsion area
 func _update_repulsion_area() -> void:
@@ -42,6 +44,11 @@ func _update_repulsion_area() -> void:
 
 	shape.radius = AGENT_RADIUS + personal_space
 
+# Update ray length for right
+func _update_wall_ray_length() -> void:
+	var repulsion_range: float = AGENT_RADIUS + personal_space
+	wall_ray_right.target_position = Vector2(repulsion_range, 0.0)
+	
 func _update_repulsion():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_wall_repulsion()
@@ -64,8 +71,38 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 
 # TODO: Wall repulsion
 func calculate_wall_repulsion():
-	# Eq. (10)
 	F_r_wa = Vector2.ZERO
+
+	if not wall_ray_right.is_colliding():
+		return
+
+	var wall_collision_point: Vector2 = wall_ray_right.get_collision_point()
+	
+	# n_w = wall normal
+	var n_w: Vector2 = wall_ray_right.get_collision_normal()
+	
+	# d_wi = distance to wall collision point
+	var d_wi: float = parent.global_position.distance_to(wall_collision_point)
+		
+	if d_wi <= 0.0001:
+		return
+	
+	# Overlap -> (r_i + ε_i - d_wi)) 
+	var overlap: float = AGENT_RADIUS + personal_space - d_wi
+	
+	if overlap <= 0.0:
+		return
+	
+	# Eq. (11) -> (n_w * (r_i + ε_i - d_wi)) / d_wi
+	F_r_wa = n_w * overlap / d_wi
+	
+	print(
+		"WALL REPULSION",
+		" | distance=", d_wi,
+		" | normal=", n_w,
+		" | overlap=", overlap,
+		" | F_r_wa=", F_r_wa
+	)
 
 # TODO: Other object repulsion. get object actual radii?
 func calculate_object_repulsion():
