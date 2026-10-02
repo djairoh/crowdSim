@@ -61,8 +61,12 @@ func _physics_process(delta):
 	
 	# Simplified Eq. (3), beta_i = 0
 	# Paper uses equation to get desired position p_i[n+1]
-	# But Godot move_and_slide requires velocity, which is obtained from displacement
-	# So we modify this equation to get the displacement instead
+	# But Godot move_and_slide requires velocity. 
+	# Instead of desired position, we use the change in position (displacement) to get velocity
+	#
+	# So we modify this equation for displacement
+	# p_i[n] = p_i[n-1] + alpha_i * v_i[n] * f_to * T + r_i
+	# p_i[n] - p_i[n-1] = alpha_i * v_i[n] * f_to * T + r_i
 	# displacement = alpha_i * v_i[n] * f_to * T + r_i
 	var displacement: Vector2 = (
 		alpha_i
@@ -72,10 +76,10 @@ func _physics_process(delta):
 		+ r_i
 	)
 
-	# TODO: position calculation is not implemented as it is in the paper.
+	# DEPRECATED: position calculation is not implemented as it is in the paper.
 	#velocity = f_to * max_speed
 	
-	# Position calculation adapted from the paper
+	# Position calculation adapted from the paper.
 	velocity = displacement / delta
 	
 	# Only update rotation when moving
@@ -87,6 +91,7 @@ func _physics_process(delta):
 	
 func _draw():
 	forces._draw()
+	repulsion._draw()
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

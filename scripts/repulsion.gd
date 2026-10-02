@@ -14,19 +14,18 @@ var F_r_ot: Vector2 = Vector2.ZERO
 
 @onready var parent: CrowdAgent = get_parent()
 @onready var repulsion_collision: CollisionShape2D = %CollisionShape2D
-@onready var wall_ray_right: RayCast2D = %right
 @onready var wall_repulsion_rays: Node2D = %WallRepulsionRays
 
-# Agent's Repulsion Area collision box radius currently set to the same size as Agent radius
+# Agent's Repulsion Area collision box radius
 # Agent's personal space (ε_i)
 # ε_i
-@export var personal_space: float = 4.0:
+@export var personal_space: float = 2.0:
 	set(value):
 		personal_space = max(value, 0.0)
 
 		if is_node_ready():
 			_update_repulsion_area()
-
+			_update_wall_ray_length()
 
 # track overlapping obstacles and agents
 var overlapping_obstacles: Dictionary = {}
@@ -110,7 +109,7 @@ func calculate_wall_repulsion():
 		var overlap: float = AGENT_RADIUS + personal_space - wall_hit_distance
 		
 		if overlap <= 0.0:
-			return
+			continue
 		
 		# Eq. (11) -> (n_w * (r_i + ε_i - d_wi)) / d_wi
 		var wall_repulsion = wall_hit_normal * overlap / wall_hit_distance
@@ -141,11 +140,11 @@ func calculate_object_repulsion():
 		
 		# Radii of obstacle k
 		# TODO: get an actual one
-		var r_d: float = AGENT_RADIUS
+		var r_k: float = AGENT_RADIUS
 		
 		# Calculating amount of overlap
-		# r_i + ε_i + r_d - d_ki
-		var overlap: float = r_i + personal_space + r_d - d_ki
+		# r_i + ε_i + r_k - d_ki
+		var overlap: float = r_i + personal_space + r_k - d_ki
 		
 		 # Only check if personal space overlap
 		if overlap <= 0.0:
@@ -153,8 +152,7 @@ func calculate_object_repulsion():
 			
 		# Calculating direction away from k
 		# (p_i - p_k) / d_ji is the direction from k toward i
-		# var direction_away = away_vector / d_ki_m
-		var direction_away = away_vector.normalized()
+		var direction_away = away_vector / d_ki
 		
 		# Eq. (12)
 		F_r_ob += direction_away * overlap
@@ -194,8 +192,7 @@ func calculate_other_agent_repulsion():
 			
 		# Calculating direction away from j
 		# (p_i - p_j) / d_ji is the direction from j toward i
-		# var direction_away = away_vector / d_ji_m
-		var direction_away = away_vector.normalized()
+		var direction_away = away_vector / d_ji
 		
 		# Eq. (13)
 		F_r_ot += direction_away * overlap
@@ -203,9 +200,9 @@ func calculate_other_agent_repulsion():
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
-		parent.draw_line(Vector2(0,0), F_r_wa*10, Color.REBECCA_PURPLE, 1.0)
-		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.BLUE_VIOLET, 1.0)
-		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.WEB_PURPLE, 1.0)
+		parent.draw_line(Vector2(0,0), F_r_wa*10, Color.RED, 1.0)
+		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.GREEN, 1.0)
+		parent.draw_line(Vector2(0,0), F_r_ot*10, Color.PURPLE, 1.0)
 	
 func _on_repulsion_area_2d_body_entered(body: Node2D) -> void:
 	if body == parent:
