@@ -15,6 +15,7 @@ var F_r_ot: Vector2 = Vector2.ZERO
 @onready var parent: CrowdAgent = get_parent()
 @onready var repulsion_collision: CollisionShape2D = %CollisionShape2D
 @onready var wall_ray_right: RayCast2D = %right
+@onready var wall_repulsion_rays: Node2D = %WallRepulsionRays
 
 # Agent's Repulsion Area collision box radius currently set to the same size as Agent radius
 # Agent's personal space (ε_i)
@@ -44,10 +45,13 @@ func _update_repulsion_area() -> void:
 
 	shape.radius = AGENT_RADIUS + personal_space
 
-# Update ray length for right
 func _update_wall_ray_length() -> void:
 	var repulsion_range: float = AGENT_RADIUS + personal_space
-	wall_ray_right.target_position = Vector2(repulsion_range, 0.0)
+	for child in wall_repulsion_rays.get_children():
+		var ray = child as RayCast2D
+		if ray == null:
+			continue
+		ray.target_position = ray.target_position.normalized() * repulsion_range
 	
 func _update_repulsion():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
@@ -72,37 +76,54 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 # TODO: Wall repulsion
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
-
-	if not wall_ray_right.is_colliding():
-		return
-
-	var wall_collision_point: Vector2 = wall_ray_right.get_collision_point()
 	
-	# n_w = wall normal
-	var n_w: Vector2 = wall_ray_right.get_collision_normal()
+	# tracks closest distance and closest normal to the wall
+	var closest_d_wi: float = INF
+	var closest_n_w: Vector2 = Vector2.ZERO
 	
-	# d_wi = distance to wall collision point
-	var d_wi: float = parent.global_position.distance_to(wall_collision_point)
+	for child in wall_repulsion_rays.get_children():
+		var ray = child as RayCast2D
+		if ray == null:
+			continue
+	
+		if not ray.is_colliding():
+			return
+
+		var wall_collision_point: Vector2 = ray.get_collision_point()
 		
-	if d_wi <= 0.0001:
-		return
-	
-	# Overlap -> (r_i + ε_i - d_wi)) 
-	var overlap: float = AGENT_RADIUS + personal_space - d_wi
-	
-	if overlap <= 0.0:
-		return
-	
-	# Eq. (11) -> (n_w * (r_i + ε_i - d_wi)) / d_wi
-	F_r_wa = n_w * overlap / d_wi
-	
-	print(
-		"WALL REPULSION",
-		" | distance=", d_wi,
-		" | normal=", n_w,
-		" | overlap=", overlap,
-		" | F_r_wa=", F_r_wa
-	)
+		# n_w = wall normal
+		var n_w: Vector2 = ray.get_collision_normal()
+		
+		# d_wi = distance to wall collision point
+		var d_wi: float = parent.global_position.distance_to(wall_collision_point)
+		
+		if d_wi < closest_d_wi:
+			closest_d_wi = d_wi
+			closest_n_w = n_w
+			
+		# No ray detected a wall
+		if closest_d_wi == null:
+			return
+			
+		if closest_d_wi <= 0.0001:
+			return
+		
+		# Overlap -> (r_i + ε_i - d_wi)) 
+		var overlap: float = AGENT_RADIUS + personal_space - closest_d_wi
+		
+		if overlap <= 0.0:
+			return
+		
+		# Eq. (11) -> (n_w * (r_i + ε_i - d_wi)) / d_wi
+		F_r_wa = closest_n_w * overlap / closest_d_wi
+		
+		print(
+			"WALL REPULSION",
+			" | distance=", d_wi,
+			" | normal=", n_w,
+			" | overlap=", overlap,
+			" | F_r_wa=", F_r_wa
+		)
 
 # TODO: Other object repulsion. get object actual radii?
 func calculate_object_repulsion():
