@@ -19,7 +19,7 @@ var F_r_ot: Vector2 = Vector2.ZERO
 # Agent's Repulsion Area collision box radius
 # Agent's personal space (ε_i)
 # ε_i
-@export var personal_space: float = 2.0:
+@export var personal_space: float = 0.0:
 	set(value):
 		personal_space = max(value, 0.0)
 
@@ -57,7 +57,7 @@ func _update_repulsion():
 	calculate_wall_repulsion()
 	calculate_object_repulsion()
 	calculate_other_agent_repulsion()
-
+	
 # TODO: Calcualte total repulsion
 func get_total_repulsion(update: bool = false) -> Vector2:
 	if update:
@@ -200,7 +200,7 @@ func calculate_other_agent_repulsion():
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
-		parent.draw_line(Vector2(0,0), F_r_wa*10, Color.RED, 1.0)
+		parent.draw_line(Vector2(0,0), F_r_wa*10, Color.LIME, 1.0)
 		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.GREEN, 1.0)
 		parent.draw_line(Vector2(0,0), F_r_ot*10, Color.PURPLE, 1.0)
 	

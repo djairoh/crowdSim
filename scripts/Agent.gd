@@ -9,6 +9,10 @@ class_name CrowdAgent
 @export var acceleration: float = 10.0
 @export var max_movement: float = 10
 
+# TODO: Create states of agent: Normal | Panic | Impatient
+enum states { NORMAL, PANIC, IMPATIENT }
+@export var current_state = states.NORMAL
+
 # refing to parent nodes like this is bad practice, but who caresssss 
 var crowd_manager: CrowdManager
 var start_position: Vector2
@@ -17,9 +21,35 @@ var desired_rotation: float = self.rotation
 var desired_velocity: Vector2 = Vector2.ZERO
 var current_speed: float = 0.0
 
+# Stopping and Waiting Rule
+var stopping_rule: bool = false
+var waiting_rule: bool = false
+
+# Defining our own stopping timer values to avoid deadlocks
+var stopping_timer: float = 0.0
+@export var stopping_time_min: float = 0.1
+@export var stopping_time_max: float = 0.3
+
 func _ready():
 	start_position = global_position
 
+func update_stopping_rule(delta):
+	# Count down after stopping
+	if stopping_rule:
+		stopping_timer -= delta
+		
+		if stopping_timer <= 0.0:
+			stopping_rule = false
+
+		return
+		
+	# TODO: Reword explanation = Based on stopping rule equation. Stop agent if agent velocity vi if repulsion
+	# forces are against it
+	var backward_repulsion: bool = desired_velocity.dot(repulsion.F_r_ot) < 0.0 
+	if backward_repulsion and current_state != states.PANIC:
+		stopping_rule = true
+		# start timer from a random small interval
+		stopping_timer = randf_range(stopping_time_min, stopping_time_max)
 
 func set_crowd_manager(crowd_manager: CrowdManager):
 	self.crowd_manager = crowd_manager
@@ -49,7 +79,11 @@ func _physics_process(delta):
 	# its desired direction of movement or instead be pushed
 	# by a repulsion force.
 	var alpha_i: float = 1.0
-	if r_i.length_squared() > 0.0001:
+	
+	# Update stopping rule to prevent shaking agents
+	update_stopping_rule(delta)
+	
+	if r_i.length_squared() > 0.0001 or stopping_rule:
 		alpha_i = 0.0
 		
 	# TODO: CHANGE beta_i to represent falling agents
@@ -84,7 +118,8 @@ func _physics_process(delta):
 	
 	# Only update rotation when moving
 	if velocity.length_squared() > 0.0001:
-		self.desired_rotation = atan2(velocity.y, velocity.x)
+		# Rotate agent to desired direction
+		self.desired_rotation = atan2(desired_velocity .y, desired_velocity .x)
 		
 	move_and_slide()
 	queue_redraw()
@@ -92,6 +127,22 @@ func _physics_process(delta):
 func _draw():
 	forces._draw()
 	repulsion._draw()
+	
+	if stopping_rule:
+		draw_circle(
+			Vector2.ZERO,
+			8.0,
+			Color.RED,
+			false,
+			2.0
+		)
+
+		draw_line(
+			Vector2.ZERO,
+			repulsion.F_r_ot * 20.0,
+			Color.RED,
+			2.0
+		)
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
