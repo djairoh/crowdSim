@@ -73,21 +73,20 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 	# Eq. (10)
 	return F_r_wa + F_r_ob + (lambda * F_r_ot)
 
-# TODO: Wall repulsion
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
 	
-	# tracks closest distance and closest normal to the wall
-	var closest_d_wi: float = INF
-	var closest_n_w: Vector2 = Vector2.ZERO
+	# Key: wall normal (n_w), Value: wall distance (d_wi)
+	var wall_hits: Dictionary = {}
 	
+	# Keep one closest hit per wall normal. So one ray per 1 wall face. In a corner, activate 2 rays, etc.
 	for child in wall_repulsion_rays.get_children():
 		var ray = child as RayCast2D
 		if ray == null:
 			continue
 	
 		if not ray.is_colliding():
-			return
+			continue
 
 		var wall_collision_point: Vector2 = ray.get_collision_point()
 		
@@ -97,33 +96,26 @@ func calculate_wall_repulsion():
 		# d_wi = distance to wall collision point
 		var d_wi: float = parent.global_position.distance_to(wall_collision_point)
 		
-		if d_wi < closest_d_wi:
-			closest_d_wi = d_wi
-			closest_n_w = n_w
+		if d_wi <= 0.0001:
+			continue
 			
-		# No ray detected a wall
-		if closest_d_wi == null:
-			return
-			
-		if closest_d_wi <= 0.0001:
-			return
-		
+		if not wall_hits.has(n_w) or d_wi < wall_hits[n_w]:
+			wall_hits[n_w] = d_wi
+	
+	# Calculate wall repulsion from saved rays in wall_hits
+	for wall_hit_normal: Vector2 in wall_hits:
+		var wall_hit_distance: float = wall_hits[wall_hit_normal]
+	
 		# Overlap -> (r_i + ε_i - d_wi)) 
-		var overlap: float = AGENT_RADIUS + personal_space - closest_d_wi
+		var overlap: float = AGENT_RADIUS + personal_space - wall_hit_distance
 		
 		if overlap <= 0.0:
 			return
 		
 		# Eq. (11) -> (n_w * (r_i + ε_i - d_wi)) / d_wi
-		F_r_wa = closest_n_w * overlap / closest_d_wi
+		var wall_repulsion = wall_hit_normal * overlap / wall_hit_distance
 		
-		print(
-			"WALL REPULSION",
-			" | distance=", d_wi,
-			" | normal=", n_w,
-			" | overlap=", overlap,
-			" | F_r_wa=", F_r_wa
-		)
+		F_r_wa += wall_repulsion
 
 # TODO: Other object repulsion. get object actual radii?
 func calculate_object_repulsion():
@@ -166,7 +158,6 @@ func calculate_object_repulsion():
 		
 		# Eq. (12)
 		F_r_ob += direction_away * overlap
-	return
 
 # Other agent repulsion
 func calculate_other_agent_repulsion():
