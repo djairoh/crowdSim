@@ -69,6 +69,8 @@ func should_wait() -> bool:
 	
 	if v_i.length_squared() <= 0.0001:
 		return false
+		
+	var forward = v_i.normalized()
 
 	# if another agent enters waiting area
 	for other_agent in visible_agents:
@@ -80,6 +82,16 @@ func should_wait() -> bool:
 		var v_j: Vector2 = other_agent.desired_velocity
 		
 		if v_j.length_squared() <= 0.0001:
+			continue
+			
+		# Direction from agent i to agent j.
+		var to_j: Vector2 = (
+			other_agent.global_position
+			- parent.global_position
+		)
+			
+		# j must actually be ahead of i.
+		if forward.dot(to_j) <= 0.0:
 			continue
 			
 		if v_i.dot(v_j) > 0.0:

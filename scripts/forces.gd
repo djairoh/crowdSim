@@ -9,16 +9,28 @@ extends Node
 const PIXELS_PER_METER: float = 24
 
 # Global force weights. Paper includes these weights but does not provide the value.
-const W_AT: float = 1.5
-const W_WA: float = 1.0
+const W_AT: float = 1.0
+const W_WA: float = 1.2
 const W_OB: float = 0.2
-const W_OT: float = 0.5
+const W_OT: float = 0.2
+
+# Raw total force
+var F_to: Vector2 = Vector2.ZERO
+
+# Normalized total force
+var f_to: Vector2 = Vector2.ZERO
+
+# keep track of previous normalized total force for Eq. 1
+var f_to_prev: Vector2 = Vector2.ZERO
 
 # forces
 var F_wa: Vector2 = Vector2.ZERO
 var F_ob: Vector2 = Vector2.ZERO
 var F_ot: Vector2 = Vector2.ZERO
 var F_at: Vector2 = Vector2.ZERO
+
+@export_range(0.0, 90.0)
+var right_preference_angle_degrees: float = 20.0
 
 # Rectangle of influence forward vision
 @onready var forward_vision_collision: CollisionShape2D = %ForwardVisionCollisionShape2D
@@ -77,12 +89,13 @@ func _get_force_from_raycast(ray: RayCast2D) -> Vector2:
 	if ray.is_colliding():
 		var n = ray.get_collision_normal()
 		var d = (ray.get_collision_point() - parent.global_position).length()
-		var ndot = n.dot(parent.velocity)
+		var v_i = parent.desired_velocity
+		var ndot = n.dot(v_i)
 		if not ndot:
 			# v and n are opposites, so the dot product is zero.
 			# That's fine, as in this case we want to move in the direction of n (away from the wall)
 			return n * 1/d
-		return Vector2(parent.velocity.x - ndot * n.x, parent.velocity.y - ndot * n.y) * 1/d
+		return Vector2(v_i.x - ndot * n.x, v_i.y - ndot * n.y) * 1/d
 	return Vector2.ZERO
 
 func calculate_wall_avoidance():
@@ -121,6 +134,9 @@ func calculate_object_avoidance():
 		# Eq. (4)
 		# Using vector triple product identity
 		var tangential_component: Vector2 = v_i * d_ki.length_squared() - d_ki * v_i.dot(d_ki)
+		
+		if tangential_component.length_squared() <= 0.0001:
+			continue
 		
 		F_ob += tangential_component.normalized()
 	
@@ -170,10 +186,29 @@ func calculate_other_agents_avoidance():
 		# tangential_component / |tangential_component|
 		var t_j: Vector2
 		
-		if tangential_component.length_squared() <= 0.0001:
+		var angle_between: float = abs(
+			v_i.normalized().angle_to(v_j.normalized())
+		)
+
+		var collinear_angle: float = min(
+			angle_between,
+			PI - angle_between
+		)
+
+		var right_preference_angle: float = deg_to_rad(
+			right_preference_angle_degrees
+		)
+
+		if collinear_angle <= right_preference_angle:
+			# HiDAC right-side preference for nearly collinear motion.
 			t_j = get_right_vector(v_i)
-		else:
+
+		elif tangential_component.length_squared() > 0.0001:
+			# Eq. (6)
 			t_j = tangential_component.normalized()
+
+		else:
+			continue
 
 		# Eq. (9)
 		# Weight due to difference in velocity vectors. 
@@ -212,16 +247,34 @@ func _update_forces():
 func get_total_force(update: bool = false) -> Vector2:
 	if update:
 		_update_forces()
-	# FIXME: does not apply weights as in the paper.
-	return (F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB).normalized()
+		
+	# Paper did not define the weights so we define it ourselves
+	# Paper uses raw F_to but this will result in unbounded force accumulation.
+	F_to = f_to_prev + F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB
+	
+	if F_to.length_squared() > 0.0001:
+		f_to = F_to.normalized()
+	else:
+		f_to = Vector2.ZERO
+		
+	f_to_prev = f_to
+	
+	return f_to
 
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
-		parent.draw_line(Vector2(0,0), F_wa*W_WA*10, Color.GOLDENROD, 1.0)
-		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 1.0)
+		parent.draw_line(Vector2(0,0), F_wa*W_WA*10, Color.GOLDENROD, 2.0)
+		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 2.0)
 		parent.draw_line(Vector2(0,0), F_ob*W_OB*10, Color.ORCHID, 1.0)
-		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 1.0)
+		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 2.0)
+		parent.draw_line(Vector2(0,0), f_to * 30.0, Color.WHITE, 2.0)
+		parent.draw_line(
+			Vector2(0,0),
+			parent.desired_velocity.normalized() * 30.0,
+			Color.CYAN,
+			2.0
+		)
 
 
 func _on_rec_of_influence_body_entered(body: Node2D) -> void:
