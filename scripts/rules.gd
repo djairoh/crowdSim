@@ -40,7 +40,7 @@ func update_stopping_rule(delta: float) -> void:
 	# Apply StoppingRule when other-agent repulsion acts against
 	# the agent's desired direction of movement.
 	var backward_repulsion: bool = parent.desired_velocity.dot(parent.repulsion.F_r_ot) < 0.0 
-	if backward_repulsion and parent.current_state != parent.states.PANIC:
+	if backward_repulsion and !parent.agent_state.is_panic():
 		stopping_rule = true
 		# start timer from a random small interval
 		stopping_timer = randf_range(stopping_time_min, stopping_time_max)
@@ -62,7 +62,7 @@ func update_waiting_rule(delta: float) -> void:
 func should_wait() -> bool:
 	
 	# TODO: Implement panic behavior
-	if parent.current_state == parent.states.PANIC:
+	if parent.agent_state.is_panic():
 		return false
 		
 	var v_i: Vector2 = parent.desired_velocity

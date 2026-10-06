@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://d0713vbx6jhyy" path="res://scripts/forces.gd" id="3_xis0x"]
 [ext_resource type="Script" uid="uid://cxwd60an63i7t" path="res://scripts/repulsion.gd" id="4_qt0yl"]
 [ext_resource type="Script" uid="uid://4kp5mp2k2ymo" path="res://scripts/rules.gd" id="5_esi2g"]
+[ext_resource type="Script" uid="uid://dvw5y6v668lhx" path="res://scripts/agent_state.gd" id="6_hy0gt"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -35,6 +36,9 @@ texture = ExtResource("2_w8vvl")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1047091476]
 shape = SubResource("CircleShape2D_utciu")
 debug_color = Color(0.8368208, 0.36799604, 0.32875565, 0.41960785)
+
+[node name="AgentState" type="Node2D" parent="." unique_id=1107416114]
+script = ExtResource("6_hy0gt")
 
 [node name="Forces" type="Node2D" parent="." unique_id=1431331718]
 script = ExtResource("3_xis0x")

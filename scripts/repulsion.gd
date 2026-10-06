@@ -1,6 +1,7 @@
 extends Node2D
 
 # Class to calculate the agent repulsion to the Wall, Other Obstacles and Other agents.
+# This class is also responsible for the pushing behaviour
 # Each component is calculated separately, but the global repulsion can be requested using get_total_repulsion()
 
 # HiDAC Repulsion forces Eq. 10 - 13
@@ -19,14 +20,32 @@ var F_r_ot: Vector2 = Vector2.ZERO
 # Agent's Repulsion Area collision box radius
 # Agent's personal space (ε_i)
 # ε_i
-@export var personal_space: float = 0.0:
+@export var personal_space: float = 4.0:
 	set(value):
-		personal_space = max(value, 0.0)
+		value = max(value, 0.0)
+
+		if is_equal_approx(personal_space, value):
+			return
+
+		personal_space = value
 
 		if is_node_ready():
 			_update_repulsion_area()
 			_update_wall_ray_length()
+			
+@export var normal_personal_space: float = 4.0
+@export var panic_personal_space: float = 0.0
+# TODO: check paper
+@export var impatient_personal_space: float = 0.0
 
+func _update_personal_space() -> void:
+	if parent.agent_state.is_panic():
+		personal_space = panic_personal_space
+	elif parent.agent_state.is_impatient():
+		personal_space = impatient_personal_space
+	else:
+		personal_space = normal_personal_space
+		
 # track overlapping obstacles and agents
 var overlapping_obstacles: Dictionary = {}
 var overlapping_agents: Dictionary = {}
@@ -42,7 +61,7 @@ func _update_repulsion_area() -> void:
 	if shape == null:
 		return
 
-	shape.radius = AGENT_RADIUS + personal_space
+	shape.radius = AGENT_RADIUS + personal_space + AGENT_RADIUS
 
 func _update_wall_ray_length() -> void:
 	var repulsion_range: float = AGENT_RADIUS + personal_space
@@ -53,6 +72,7 @@ func _update_wall_ray_length() -> void:
 		ray.target_position = ray.target_position.normalized() * repulsion_range
 	
 func _update_repulsion():
+	_update_personal_space()
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_wall_repulsion()
 	calculate_object_repulsion()

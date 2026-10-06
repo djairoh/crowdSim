@@ -6,13 +6,12 @@ class_name CrowdAgent
 @onready var forces = $Forces
 @onready var repulsion = $Repulsion
 @onready var rules = $Rules
+@onready var agent_state: AgentState = $AgentState
+
+
 @export var max_speed: float = 32.0
 @export var acceleration: float = 10.0
 @export var max_movement: float = 10
-
-# TODO: Create states of agent: Normal | Panic | Impatient
-enum states { NORMAL, PANIC, IMPATIENT }
-@export var current_state = states.NORMAL
 
 # refing to parent nodes like this is bad practice, but who caresssss 
 var crowd_manager: CrowdManager
