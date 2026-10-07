@@ -25,6 +25,9 @@ const PANIC_PROPAGATION_RATE: float = 0.5
 const DENSITY_THRESHOLD: int = 8
 const DENSITY_PANIC_RATE: float = 0.05
 
+func update(delta: float) -> void:
+	update_panic(delta)
+
 # Set the states
 func set_normal() -> void:
 	current_state = states.NORMAL

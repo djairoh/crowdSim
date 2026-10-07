@@ -11,7 +11,7 @@ class_name CrowdAgent
 @onready var repulsion = $Repulsion
 @onready var rules = $Rules
 @onready var agent_state: AgentState = $AgentState
-@onready var falling: Falling = %Falling
+@onready var behaviours: Behaviours = $Behaviours
 
 @export var max_speed: float = 32.0
 @export var panic_speed_multiplier: float = 1.4
@@ -31,7 +31,7 @@ func _ready():
 	start_position = global_position
 	
 	if start_fallen:
-		falling.fall()
+		behaviours.falling.fall()
 
 func set_crowd_manager(crowd_manager: CrowdManager):
 	self.crowd_manager = crowd_manager
@@ -50,9 +50,6 @@ func _physics_process(delta):
 	if agent_state.is_fallen():
 		velocity = Vector2.ZERO
 		return
-		
-	# Update panic state
-	agent_state.update_panic(delta)
 	
 	# Eq. (1) + Eq. (2)
 	var f_to = forces.get_total_force(true)
@@ -67,6 +64,12 @@ func _physics_process(delta):
 	
 	# Update stopping rule to prevent shaking agents
 	rules.update_rules(delta)
+	
+	# Update agent state
+	#agent_state.update(delta)
+	
+	# Update agent behaviours
+	behaviours.update(delta)
 	
 	if r_i.length_squared() > 0.0001 or rules.stopping_rule or rules.waiting_rule:
 		alpha_i = 0.0
@@ -144,7 +147,7 @@ func _draw():
 	if agent_state.is_fallen():
 		var fallen_color: Color
 
-		if falling.is_being_stepped_on():
+		if behaviours.falling.is_being_stepped_on():
 			fallen_color = Color(1.0, 0.4, 0.0, 0.7) # orange, stepped on
 		else:
 			fallen_color = Color(0.5, 0.0, 0.0, 0.4) # transparent dark red
@@ -198,4 +201,7 @@ func _on_move_idle_timer_timeout() -> void:
 
 func _on_attraction_navigation_target_reached() -> void:
 	# TODO: what do when goal is reached?
+	if behaviours.bottleneck_avoidance.rerouting:
+		return
+		
 	self.queue_free()

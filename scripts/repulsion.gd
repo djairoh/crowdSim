@@ -88,7 +88,7 @@ func _update_repulsion():
 	
 	# falling agents
 	if not parent.agent_state.is_fallen() and should_fall():
-		parent.falling.fall()
+		parent.behaviours.falling.fall()
 	
 # TODO: Calcualte total repulsion
 func get_total_repulsion(update: bool = false) -> Vector2:

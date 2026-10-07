@@ -11,6 +11,9 @@ class_name CrowdManager
 @export_range(0.0, 1.0)
 var panic_ratio: float = 0.2
 
+@export_range(0.0, 1.0)
+var impatient_ratio: float = 0.2
+
 func _ready():
 	var viewport_size = get_viewport_rect().size
 	var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
@@ -24,10 +27,10 @@ func _initialize_agent(agent: CrowdAgent):
 	agent.global_position = lvl.get_random_spawn()
 	
 	# Set panic agents
-	#if randf() < panic_ratio:
-		#agent.agent_state.set_panic()
-	#else:
-		#agent.agent_state.set_normal()
+	if randf() < impatient_ratio:
+		agent.agent_state.set_impatient()
+	else:
+		agent.agent_state.set_normal()
 		
 	agent.request_path(lvl.get_random_goal())
 	# FIXME: agent unreachable target logic

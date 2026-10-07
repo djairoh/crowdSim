@@ -1,7 +1,7 @@
 extends Node2D
 class_name Falling
 
-@onready var parent: CrowdAgent = get_parent()
+@onready var parent: CrowdAgent = get_parent().get_parent()
 @onready var fallen_body_area: Area2D = $FallingBodyArea
 @onready var fallen_collision: CollisionShape2D = $FallingBodyArea/CollisionShape2D
 

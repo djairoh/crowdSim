@@ -7,6 +7,8 @@
 [ext_resource type="Script" uid="uid://4kp5mp2k2ymo" path="res://scripts/rules.gd" id="5_esi2g"]
 [ext_resource type="Script" uid="uid://dvw5y6v668lhx" path="res://scripts/agent_state.gd" id="6_hy0gt"]
 [ext_resource type="Script" uid="uid://dusasmd2usvcg" path="res://scripts/falling.gd" id="7_nl6fr"]
+[ext_resource type="Script" uid="uid://t7qyfmi8t2x0" path="res://scenes/behaviours.gd" id="7_wxnss"]
+[ext_resource type="Script" uid="uid://c8l6sw6g6us8w" path="res://scenes/bottleneck_avoidance.gd" id="9_tdbcq"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -209,20 +211,28 @@ rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_7vrlv")
 debug_color = Color(0.08235294, 0.7372549, 0, 0.41960785)
 
-[node name="Falling" type="Node2D" parent="." unique_id=720798026]
+[node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
+autostart = true
+
+[node name="Behaviours" type="Node2D" parent="." unique_id=1039173932]
+unique_name_in_owner = true
+script = ExtResource("7_wxnss")
+
+[node name="Falling" type="Node2D" parent="Behaviours" unique_id=720798026]
 unique_name_in_owner = true
 script = ExtResource("7_nl6fr")
 
-[node name="FallingBodyArea" type="Area2D" parent="Falling" unique_id=1875041592]
+[node name="FallingBodyArea" type="Area2D" parent="Behaviours/Falling" unique_id=1875041592]
 collision_layer = 0
 collision_mask = 2
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Falling/FallingBodyArea" unique_id=730940085]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Behaviours/Falling/FallingBodyArea" unique_id=730940085]
 shape = SubResource("RectangleShape2D_kd37s")
 debug_color = Color(1, 0.6, 0.69803923, 0.41960785)
 
-[node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
-autostart = true
+[node name="BottleneckAvoidance" type="Node2D" parent="Behaviours" unique_id=1348935948]
+unique_name_in_owner = true
+script = ExtResource("9_tdbcq")
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
 [connection signal="target_reached" from="Forces/AttractionNavigation" to="." method="_on_attraction_navigation_target_reached"]
@@ -232,6 +242,6 @@ autostart = true
 [connection signal="body_exited" from="Repulsion/RepulsionArea" to="Repulsion" method="_on_repulsion_area_2d_body_exited"]
 [connection signal="body_entered" from="Rules/WaitingArea" to="Rules" method="_on_waiting_area_body_entered"]
 [connection signal="body_exited" from="Rules/WaitingArea" to="Rules" method="_on_waiting_area_body_exited"]
-[connection signal="body_entered" from="Falling/FallingBodyArea" to="Falling" method="_on_falling_body_area_body_entered"]
-[connection signal="body_exited" from="Falling/FallingBodyArea" to="Falling" method="_on_falling_body_area_body_exited"]
 [connection signal="timeout" from="MoveIdleTimer" to="." method="_on_move_idle_timer_timeout"]
+[connection signal="body_entered" from="Behaviours/Falling/FallingBodyArea" to="Behaviours/Falling" method="_on_falling_body_area_body_entered"]
+[connection signal="body_exited" from="Behaviours/Falling/FallingBodyArea" to="Behaviours/Falling" method="_on_falling_body_area_body_exited"]
