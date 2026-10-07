@@ -7,13 +7,12 @@ class_name AgentState
 
 @onready var sprite: Sprite2D = get_parent().get_node("Sprite2D")
 
-
 enum states {
 	NORMAL,
 	PANIC,
-	IMPATIENT
+	IMPATIENT,
+	FALLEN,
 }
-
 @export var current_state = states.NORMAL
 
 # Set the states
@@ -29,6 +28,10 @@ func set_impatient() -> void:
 	current_state = states.IMPATIENT
 	sprite.modulate = Color.YELLOW
 	
+func set_fallen() -> void:
+	current_state = states.FALLEN
+	sprite.modulate = Color.WEB_PURPLE
+	
 # Check agent state
 func is_normal() -> bool:
 	return current_state == states.NORMAL
@@ -38,3 +41,6 @@ func is_panic() -> bool:
 
 func is_impatient() -> bool:
 	return current_state == states.IMPATIENT
+	
+func is_fallen() -> bool:
+	return current_state == states.FALLEN

@@ -13,6 +13,14 @@ var F_r_wa: Vector2 = Vector2.ZERO
 var F_r_ob: Vector2 = Vector2.ZERO
 var F_r_ot: Vector2 = Vector2.ZERO
 
+# Retain agent repusion forces
+var agent_repulsion_forces: Array[Vector2] = []
+var min_agent_repulsion_count: int = 3
+
+# Falling force and alignment threshold
+@export var fall_force_threshold: float = 5.0
+@export_range(-1.0, 1.0) var fall_alignment_threshold: float = 0.7
+
 @onready var parent: CrowdAgent = get_parent()
 @onready var repulsion_collision: CollisionShape2D = %CollisionShape2D
 @onready var wall_repulsion_rays: Node2D = %WallRepulsionRays
@@ -77,6 +85,10 @@ func _update_repulsion():
 	calculate_wall_repulsion()
 	calculate_object_repulsion()
 	calculate_other_agent_repulsion()
+	
+	# falling agents
+	if not parent.agent_state.is_fallen() and should_fall():
+		parent.fall()
 	
 # TODO: Calcualte total repulsion
 func get_total_repulsion(update: bool = false) -> Vector2:
@@ -180,11 +192,17 @@ func calculate_object_repulsion():
 # Other agent repulsion
 func calculate_other_agent_repulsion():
 	F_r_ot = Vector2.ZERO
+	agent_repulsion_forces.clear()
+	
 	for other_agent in overlapping_agents:
 		if not is_instance_valid(other_agent):
 			continue
 			
 		if other_agent == parent:
+			continue
+			
+		# Fallen agents are calculated differently
+		if other_agent.agent_state.is_fallen():
 			continue
 			
 		var p_i: Vector2 = parent.global_position
@@ -212,10 +230,14 @@ func calculate_other_agent_repulsion():
 			
 		# Calculating direction away from j
 		# (p_i - p_j) / d_ji is the direction from j toward i
-		var direction_away = away_vector / d_ji
+		var direction_away: Vector2 = away_vector / d_ji
+		var repulsion_force: Vector2 = direction_away * overlap
 		
 		# Eq. (13)
 		F_r_ot += direction_away * overlap
+		
+		# retain repulsion force
+		agent_repulsion_forces.append(repulsion_force)
 		
 func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
@@ -224,6 +246,36 @@ func _draw():
 		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.GREEN, 1.0)
 		parent.draw_line(Vector2(0,0), F_r_ot*10, Color.PURPLE, 1.0)
 	
+# TODO: Check if force from other agents is strong enough to make agents fall
+func should_fall() -> bool:
+	# minimal number of other agents
+	if agent_repulsion_forces.size() < min_agent_repulsion_count:
+		return false
+		
+	# Resulting pushing force is not strong enough
+	if F_r_ot.length() < fall_force_threshold:
+		return false
+		
+	# Resultant repulsion direction
+	var resultant_direction: Vector2 = F_r_ot.normalized()
+	# Number of other agents with aligned direction
+	var aligned_count: int = 0
+	
+	for force in agent_repulsion_forces:
+		if force.length() <= 0.0001:
+			continue
+		
+		# repulsion force alignment with resultant direction
+		var alignment = force.normalized().dot(resultant_direction)
+		
+		if alignment >= fall_alignment_threshold:
+			aligned_count += 1
+	
+	# should fall if "majority" of forces approximately in the same direction
+	# we define "majority" as more than half of the resulting forces
+	return aligned_count > agent_repulsion_forces.size() * 0.5
+
+
 func _on_repulsion_area_2d_body_entered(body: Node2D) -> void:
 	if body == parent:
 		return

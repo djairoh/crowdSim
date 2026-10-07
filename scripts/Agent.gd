@@ -3,6 +3,10 @@ class_name CrowdAgent
 
 # this class models an individual in a crowd
 
+# collision shapes for agents
+@onready var standing_collision: CollisionShape2D = $CollisionShape2D
+@onready var fallen_collision: CollisionShape2D = $FallenCollisionShape2D
+
 @onready var forces = $Forces
 @onready var repulsion = $Repulsion
 @onready var rules = $Rules
@@ -36,6 +40,11 @@ func _process(delta: float) -> void:
 		self.rotation = lerp_angle(self.rotation, self.desired_rotation, clampf(4*delta, 0, 1))
 
 func _physics_process(delta):
+	# Stop moving if agent falls.
+	if agent_state.is_fallen():
+		velocity = Vector2.ZERO
+		return
+	
 	self.desired_velocity = (forces.get_desired_direction() * max_speed)
 	
 	# Eq. (1) + Eq. (2)
@@ -87,7 +96,27 @@ func _physics_process(delta):
 	move_and_slide()
 	queue_redraw()
 	
+func fall() -> void:
+	if agent_state.is_fallen():
+		return
+
+	agent_state.set_fallen()
+
+	velocity = Vector2.ZERO
+	current_speed = 0.0
+
+	standing_collision.set_deferred("disabled", true)
+	fallen_collision.set_deferred("disabled", false)
+	queue_redraw()
+	
 func _draw():
+	if agent_state.is_fallen():
+		draw_rect(
+			Rect2(-14.0, -6.0, 28.0, 12.0),
+			Color.DARK_RED,
+			true
+		)
+		
 	forces._draw()
 	repulsion._draw()
 	
