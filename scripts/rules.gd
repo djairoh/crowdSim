@@ -78,6 +78,10 @@ func should_wait() -> bool:
 		if not is_instance_valid(other_agent):
 			continue
 			
+		# Fallen agents aren't people we're queuing behind
+		if other_agent.agent_state.is_fallen():
+			continue
+			
 		# Apply waiting rule for agent with same direction
 		var v_j: Vector2 = other_agent.desired_velocity
 		

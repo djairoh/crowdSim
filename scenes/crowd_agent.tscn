@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://cxwd60an63i7t" path="res://scripts/repulsion.gd" id="4_qt0yl"]
 [ext_resource type="Script" uid="uid://4kp5mp2k2ymo" path="res://scripts/rules.gd" id="5_esi2g"]
 [ext_resource type="Script" uid="uid://dvw5y6v668lhx" path="res://scripts/agent_state.gd" id="6_hy0gt"]
+[ext_resource type="Script" uid="uid://dusasmd2usvcg" path="res://scripts/falling.gd" id="7_nl6fr"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -17,12 +18,18 @@ size = Vector2(28, 12)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6u5ao"]
 size = Vector2(72, 32)
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_wwv84"]
+radius = 48.0
+
 [sub_resource type="CircleShape2D" id="CircleShape2D_6u5ao"]
 radius = 6.0
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_7vrlv"]
 radius = 8.0
 height = 20.0
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_kd37s"]
+size = Vector2(28, 12)
 
 [node name="Agent" type="CharacterBody2D" unique_id=603397563 groups=["agent"]]
 collision_layer = 2
@@ -48,7 +55,6 @@ disabled = true
 script = ExtResource("6_hy0gt")
 
 [node name="Forces" type="Node2D" parent="." unique_id=1431331718]
-visible = false
 script = ExtResource("3_xis0x")
 
 [node name="AttractionNavigation" type="NavigationAgent2D" parent="Forces" unique_id=37287173]
@@ -62,6 +68,7 @@ time_horizon_obstacles = 0.1
 max_speed = 5.0
 
 [node name="RecOfInfluence" type="Area2D" parent="Forces" unique_id=410069496]
+visible = false
 collision_layer = 0
 collision_mask = 2
 input_pickable = false
@@ -69,15 +76,18 @@ monitorable = false
 
 [node name="CollisionPolygon2D" type="CollisionPolygon2D" parent="Forces/RecOfInfluence" unique_id=224673388]
 unique_name_in_owner = true
+visible = false
 polygon = PackedVector2Array(-8, -8, -8, 8, 0, 8, 0, 16, 72, 16, 72, -16, 0, -16, 0, -8)
 
 [node name="ForwardVisionCollisionShape2D" type="CollisionShape2D" parent="Forces/RecOfInfluence" unique_id=28635057]
 unique_name_in_owner = true
+visible = false
 position = Vector2(36, 0)
 shape = SubResource("RectangleShape2D_6u5ao")
 debug_color = Color(0.9273635, 0.52852875, 1, 0.41960785)
 
 [node name="WallCast" type="Node2D" parent="Forces" unique_id=1265164409]
+visible = false
 
 [node name="left" type="RayCast2D" parent="Forces/WallCast" unique_id=890530243]
 position = Vector2(0, -16)
@@ -93,6 +103,14 @@ hit_from_inside = true
 position = Vector2(0, 16)
 target_position = Vector2(72, 0)
 hit_from_inside = true
+
+[node name="FallenAgentArea" type="Area2D" parent="Forces" unique_id=300180427]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Forces/FallenAgentArea" unique_id=321314043]
+shape = SubResource("CircleShape2D_wwv84")
 
 [node name="Repulsion" type="Node2D" parent="." unique_id=1879718809]
 visible = false
@@ -180,6 +198,18 @@ rotation = 1.5707964
 shape = SubResource("CapsuleShape2D_7vrlv")
 debug_color = Color(0.08235294, 0.7372549, 0, 0.41960785)
 
+[node name="Falling" type="Node2D" parent="." unique_id=720798026]
+unique_name_in_owner = true
+script = ExtResource("7_nl6fr")
+
+[node name="FallingBodyArea" type="Area2D" parent="Falling" unique_id=1875041592]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Falling/FallingBodyArea" unique_id=730940085]
+shape = SubResource("RectangleShape2D_kd37s")
+debug_color = Color(1, 0.6, 0.69803923, 0.41960785)
+
 [node name="MoveIdleTimer" type="Timer" parent="." unique_id=1747077620]
 autostart = true
 
@@ -191,4 +221,6 @@ autostart = true
 [connection signal="body_exited" from="Repulsion/RepulsionArea" to="Repulsion" method="_on_repulsion_area_2d_body_exited"]
 [connection signal="body_entered" from="Rules/WaitingArea" to="Rules" method="_on_waiting_area_body_entered"]
 [connection signal="body_exited" from="Rules/WaitingArea" to="Rules" method="_on_waiting_area_body_exited"]
+[connection signal="body_entered" from="Falling/FallingBodyArea" to="Falling" method="_on_falling_body_area_body_entered"]
+[connection signal="body_exited" from="Falling/FallingBodyArea" to="Falling" method="_on_falling_body_area_body_exited"]
 [connection signal="timeout" from="MoveIdleTimer" to="." method="_on_move_idle_timer_timeout"]

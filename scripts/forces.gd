@@ -28,12 +28,18 @@ var F_wa: Vector2 = Vector2.ZERO
 var F_ob: Vector2 = Vector2.ZERO
 var F_ot: Vector2 = Vector2.ZERO
 var F_at: Vector2 = Vector2.ZERO
+# Falling agents forces
+var F_fa: Vector2 = Vector2.ZERO
 
 @export_range(0.0, 90.0)
 var right_preference_angle_degrees: float = 20.0
 
 # Rectangle of influence forward vision
 @onready var forward_vision_collision: CollisionShape2D = %ForwardVisionCollisionShape2D
+
+# Fallen agent area
+@onready var fallen_agent_area: Area2D = %FallenAgentArea
+@onready var fallen_agent_body_area: Area2D = %FallingBodyArea
 
 @onready var parent: CrowdAgent = get_parent()
 
@@ -76,6 +82,7 @@ func get_desired_direction() -> Vector2:
 func request_path(goal: Vector2) -> bool:
 	f_at_nav.target_position = goal
 	return f_at_nav.is_target_reachable()
+	
 	
 func set_selected(val: bool):
 	f_at_nav.debug_use_custom = val
@@ -162,6 +169,10 @@ func calculate_other_agents_avoidance():
 		if not is_instance_valid(other_agent):
 			continue
 			
+		# ignore fallen agents
+		if other_agent.agent_state.is_fallen():
+			continue
+			
 		# Check the actual rectangle.
 		if not is_inside_influence_rectangle(other_agent):
 			continue
@@ -231,11 +242,70 @@ func calculate_other_agents_avoidance():
 func get_right_vector(direction: Vector2) -> Vector2:
 	var forward :Vector2 = direction.normalized()
 	return Vector2(-forward.y, forward.x)
-	
 
 func calculate_attraction():
 	# base navigation
 	F_at = parent.desired_velocity.normalized()
+	
+# TODO: Fix avoiding corpse	
+func get_falling_agent_force()-> Vector2:
+	var F_ta: Vector2 = Vector2.ZERO
+	var v_i: Vector2 = parent.desired_velocity
+	
+	if v_i.length_squared() <= 0.0001:
+		return Vector2.ZERO
+		
+	var forward: Vector2 = v_i.normalized()
+		
+	# Get fallen agents
+	for body in fallen_agent_area.get_overlapping_bodies():
+		
+		# Ignore non agents
+		if not body is CrowdAgent:
+			continue
+				
+		var fallen_agent: CrowdAgent = body
+
+		# Ignore yourself
+		if fallen_agent == parent:
+			continue
+			
+		# Ignore non fallen agents
+		if not fallen_agent.agent_state.is_fallen():
+			continue
+		
+		var d_fi: Vector2 = fallen_agent.global_position - parent.global_position
+
+		if d_fi.length_squared() <= 0.0001:
+			continue
+			
+		var direction_to_fallen = d_fi.normalized()
+					
+		# only avoid fallen agents infront
+		if forward.dot(direction_to_fallen) <= 0.0001:
+			continue
+		
+		# Right direction relative to where we're travelling
+		var right: Vector2 = get_right_vector(forward)
+
+		# Eq. (4)
+		# Using vector triple product identity
+		var tangential_component: Vector2 = v_i * d_fi.length_squared() - d_fi * v_i.dot(d_fi)
+		
+		if tangential_component.length_squared() <= 0.0001:
+			return right
+		
+		if tangential_component.dot(right) < 0.0:
+			F_fa = -tangential_component
+		else:
+			F_fa = tangential_component
+		
+		# This doesn't really avoid the corpse
+		return F_fa.normalized()
+		# This rotates around the corpse
+		#return F_fa
+		
+	return Vector2.ZERO
 
 func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
