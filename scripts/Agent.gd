@@ -8,7 +8,6 @@ class_name CrowdAgent
 @onready var rules = $Rules
 @onready var agent_state: AgentState = $AgentState
 
-
 @export var max_speed: float = 32.0
 @export var acceleration: float = 10.0
 @export var max_movement: float = 10
@@ -91,6 +90,11 @@ func _physics_process(delta):
 func _draw():
 	forces._draw()
 	repulsion._draw()
+	
+	## Show panic agents
+	#if agent_state.is_panic():
+		#draw_circle(Vector2.ZERO, 6.0, Color.ORANGE_RED, true)
+
 	
 	if rules.stopping_rule:
 		draw_circle(Vector2.ZERO, 8.0, Color.RED, false, 2.0)

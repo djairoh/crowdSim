@@ -7,6 +7,10 @@ class_name CrowdManager
 @onready var lvl = $level
 @onready var nav_reg = $level/NavigationRegion2D
 
+# Panic agent ratio
+@export_range(0.0, 1.0)
+var panic_ratio: float = 0.2
+
 func _ready():
 	var viewport_size = get_viewport_rect().size
 	var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
@@ -18,6 +22,13 @@ func _ready():
 func _initialize_agent(agent: CrowdAgent):
 	agent.set_crowd_manager(self)
 	agent.global_position = lvl.get_random_spawn()
+	
+	# Set panic agents
+	if randf() < panic_ratio:
+		agent.agent_state.set_panic()
+	else:
+		agent.agent_state.set_normal()
+		
 	agent.request_path(lvl.get_random_goal())
 	# FIXME: agent unreachable target logic
 	#while agent.request_path(lvl.get_random_goal()) == false:

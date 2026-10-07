@@ -61,7 +61,7 @@ func _update_repulsion_area() -> void:
 	if shape == null:
 		return
 
-	shape.radius = AGENT_RADIUS + personal_space + AGENT_RADIUS
+	shape.radius = AGENT_RADIUS + personal_space
 
 func _update_wall_ray_length() -> void:
 	var repulsion_range: float = AGENT_RADIUS + personal_space
