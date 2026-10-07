@@ -14,6 +14,7 @@ class_name CrowdAgent
 @onready var falling: Falling = %Falling
 
 @export var max_speed: float = 32.0
+@export var panic_speed_multiplier: float = 1.4
 @export var acceleration: float = 10.0
 @export var max_movement: float = 10
 @export var start_fallen: bool = false
@@ -49,8 +50,9 @@ func _physics_process(delta):
 	if agent_state.is_fallen():
 		velocity = Vector2.ZERO
 		return
-	
-	self.desired_velocity = (forces.get_desired_direction() * max_speed)
+		
+	# Update panic state
+	agent_state.update_panic(delta)
 	
 	# Eq. (1) + Eq. (2)
 	var f_to = forces.get_total_force(true)
@@ -76,14 +78,6 @@ func _physics_process(delta):
 	var beta_i: float = 0.0
 	
 	if F_fa.length_squared() > 0.0001:
-		#print(
-			#"F_fa: ", F_fa,
-			#" alpha: ", alpha_i,
-			#" waiting: ", rules.waiting_rule,
-			#" stopping: ", rules.stopping_rule,
-			#" repulsion: ", r_i,
-			#
-		#)
 		beta_i = 0.5
 	
 	# movement_direction = normal desired direction + fallen agent avoidance
@@ -95,10 +89,18 @@ func _physics_process(delta):
 	
 	if movement_direction.length_squared() > 0.0001:
 		movement_direction = movement_direction.normalized()
+		
+	var target_max_speed: float = max_speed
+	
+	# Increase movement speed when panic
+	if agent_state.is_panic():
+		target_max_speed *= panic_speed_multiplier
+		
+	self.desired_velocity = forces.get_desired_direction() * target_max_speed
 
 	# Update v_i[n].
 	# v_i[n] = min(v_i[n-1] + aT, v_i_MAX)
-	current_speed = min(current_speed + acceleration * delta, max_speed)
+	current_speed = min(current_speed + acceleration * delta, target_max_speed)
 	
 	# Eq. (3)
 	# Paper uses equation to get desired position p_i[n+1]

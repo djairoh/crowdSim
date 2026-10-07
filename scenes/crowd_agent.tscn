@@ -15,6 +15,9 @@ radius = 6.0
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wwv84"]
 size = Vector2(28, 12)
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_jm76c"]
+radius = 36.0
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_6u5ao"]
 size = Vector2(72, 32)
 
@@ -53,6 +56,14 @@ disabled = true
 
 [node name="AgentState" type="Node2D" parent="." unique_id=1107416114]
 script = ExtResource("6_hy0gt")
+
+[node name="PanicArea" type="Area2D" parent="AgentState" unique_id=340625144]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="AgentState/PanicArea" unique_id=1092890294]
+shape = SubResource("CircleShape2D_jm76c")
+debug_color = Color(0.67058825, 0, 0.0627451, 0.41960785)
 
 [node name="Forces" type="Node2D" parent="." unique_id=1431331718]
 script = ExtResource("3_xis0x")

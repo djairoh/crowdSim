@@ -24,10 +24,10 @@ func _initialize_agent(agent: CrowdAgent):
 	agent.global_position = lvl.get_random_spawn()
 	
 	# Set panic agents
-	if randf() < panic_ratio:
-		agent.agent_state.set_panic()
-	else:
-		agent.agent_state.set_normal()
+	#if randf() < panic_ratio:
+		#agent.agent_state.set_panic()
+	#else:
+		#agent.agent_state.set_normal()
 		
 	agent.request_path(lvl.get_random_goal())
 	# FIXME: agent unreachable target logic
