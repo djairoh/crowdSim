@@ -30,9 +30,16 @@ func update(delta):
 	if congestion_timer >= congestion_timer_threshold:
 		if not bottleneck_detected:
 			bottleneck_detected = true
+			parent.queue_redraw()
+
 			print(parent.name, " detects a bottleneck! Now lets move!!!")
+			
+			
 	
 	if congestion_timer <= 0.0:
+		if bottleneck_detected:
+			bottleneck_detected = false
+			parent.queue_redraw()
 		reset()
 
 func is_route_congested() -> bool:
@@ -68,4 +75,3 @@ func avoid_bottleneck()->void:
 func reset()->void:
 	bottleneck_detected = false
 	congestion_timer = 0.0
-	

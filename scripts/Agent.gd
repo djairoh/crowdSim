@@ -144,6 +144,9 @@ func _physics_process(delta):
 	queue_redraw()
 	
 func _draw():
+	if behaviours.bottleneck_avoidance.bottleneck_detected:
+		modulate = Color.DARK_BLUE
+	
 	if agent_state.is_fallen():
 		var fallen_color: Color
 
@@ -160,6 +163,7 @@ func _draw():
 		
 	forces._draw()
 	repulsion._draw()
+	
 		
 	## Show panic agents
 	#if agent_state.is_panic():
