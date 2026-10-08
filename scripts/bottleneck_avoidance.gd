@@ -41,13 +41,17 @@ func update(delta):
 			parent.queue_redraw()
 
 			print(parent.name, " detects a bottleneck! Now lets find cadidate points!!!")
-			# Find alternative points to pivot navigation to
-			var alternative_points := get_alternative_points()
-
-			for point in alternative_points:
-				print(parent.name, " candidate: ", point)
-				
-			# TODO: Find best candidate points and check if you can actually reach there
+			# Find best alternative point from a list of candidate points
+			# and check if you can actually reach there
+			var alternative_point := get_best_alternative_point()
+			if alternative_point != Vector2.ZERO:
+				print(
+					parent.name,
+					" BEST alternative: ",
+					alternative_point
+				)
+			else:
+				print(parent.name, " found no alternative")
 			# TODO: Find the path to the best point
 			# TODO: Navigate to the best point
 				
@@ -116,6 +120,69 @@ func get_alternative_points() -> Array[Vector2]:
 		points.append(nav_point)
 	
 	return points
+	
+# Increment total distance of a path
+func get_path_length(path: PackedVector2Array)->float:
+	var total_length = 0.0
+	for i in range(path.size() - 1):
+		# increment distance from current path to the next
+		total_length += path[i].distance_to(path[i+1])
+	return total_length
+
+func get_best_alternative_point()->Vector2:
+	var candidate_points := get_alternative_points()
+	
+	if candidate_points.is_empty():
+		return Vector2.ZERO
+	
+	var navigation_map: RID = parent.get_world_2d().navigation_map
+
+	# Best path is the shortest path
+	var shortest_path_length: float = INF
+	var shortest_path_point: Vector2 = Vector2.ZERO
+	
+	for candidate_point in candidate_points:
+		# Path from current point to candidate point
+		var path_to_candidate := NavigationServer2D.map_get_path(
+			navigation_map,
+			parent.global_position,
+			candidate_point,
+			true
+		)
+		
+		# TODO: what is this for
+		if path_to_candidate.size() < 2:
+			continue
+	
+		# Path from candidate to actual goal
+		var path_to_goal := NavigationServer2D.map_get_path(
+			navigation_map,
+			candidate_point,
+			parent.goal,
+			true
+		)
+		
+		if path_to_goal.size() < 2:
+			continue
+			
+		var total_length = (
+			get_path_length(path_to_candidate) 
+			+ get_path_length(path_to_goal)
+		)
+		
+		print(
+			parent.name,
+			" candidate_point ",
+			candidate_point,
+			" route length = ",
+			total_length
+		)
+	
+		if total_length < shortest_path_length:
+			shortest_path_length = total_length
+			shortest_path_point = candidate_point
+	
+	return shortest_path_point
 	
 func get_alternative_route()-> Vector2:
 	# TODO: Find a free area? how
