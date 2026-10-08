@@ -1,8 +1,7 @@
 extends Node
 class_name BottleneckAvoidance
 
-# Detect bottlenecks in crowds, and 
-# TODO: find alternative route
+# Detect bottlenecks in crowds, and find alternative route
 @onready var parent: CrowdAgent = get_parent().get_parent()
 
 const VELOCITY_LENGTH_THRESHOLD: float = 5.0
@@ -18,13 +17,21 @@ var bottleneck_detected: bool = false
 @export var alternative_distance: float = 72.0 # 72px/24px = 3m
 @export var max_nav_snap_distance: float = 12.0
 
-var alt_path_goal: Vector2 = Vector2.ZERO
+# Rerouting
+var rerouting: bool = false
+var alternative_point: Vector2 = Vector2.ZERO
+# How close the agent must get to the temporary waypoint
+# before continuing toward its original goal.
+@export var alternative_reached_distance: float = 12.0
 
 
 func update(delta):
 	if not parent.agent_state.is_impatient():
-		bottleneck_detected = false
-		congestion_timer = 0.0
+		reset()
+		return
+	
+	if rerouting:
+		update_rerouting()
 		return
 	
 	# Check congestion	
@@ -43,19 +50,14 @@ func update(delta):
 			print(parent.name, " detects a bottleneck! Now lets find cadidate points!!!")
 			# Find best alternative point from a list of candidate points
 			# and check if you can actually reach there
-			var alternative_point := get_best_alternative_point()
-			if alternative_point != Vector2.ZERO:
-				print(
-					parent.name,
-					" BEST alternative: ",
-					alternative_point
-				)
+			var candidate_point := get_best_alternative_point()
+			if candidate_point != Vector2.ZERO:
+				print( parent.name, " BEST alternative: ", candidate_point)
+				
+				# Navigate to the best point
+				start_rerouting(candidate_point)
 			else:
 				print(parent.name, " found no alternative")
-			# TODO: Find the path to the best point
-			# TODO: Navigate to the best point
-				
-	# Find alternative pathway
 	
 	# Reset
 	if congestion_timer <= 0.0:
@@ -83,15 +85,13 @@ func is_route_congested() -> bool:
 func get_alternative_points() -> Array[Vector2]:
 	var points :Array[Vector2] = []
 	
-	# TODO: Add possible alternative points
-	
-	# TODO: get current goal direction
+	# get current goal direction
 	var forward: Vector2 = parent.global_position.direction_to(parent.goal)
 	
 	if forward.length_squared() <= 0.0001:
 		return points
 	
-	# TODO: find direction left and right of goal
+	# find direction left and right of goal
 	var right := Vector2(-forward.y, forward.x)
 	
 	# Search mostly sideways, but a little forward.
@@ -129,6 +129,8 @@ func get_path_length(path: PackedVector2Array)->float:
 		total_length += path[i].distance_to(path[i+1])
 	return total_length
 
+# Get best alternative point and shortest path
+# TODO: Get best point that actually circumvent around the crowd
 func get_best_alternative_point()->Vector2:
 	var candidate_points := get_alternative_points()
 	
@@ -150,7 +152,7 @@ func get_best_alternative_point()->Vector2:
 			true
 		)
 		
-		# TODO: what is this for
+		# No usable navigation path to this candidate.
 		if path_to_candidate.size() < 2:
 			continue
 	
@@ -162,6 +164,7 @@ func get_best_alternative_point()->Vector2:
 			true
 		)
 		
+		# No usable navigation path to final goal.
 		if path_to_goal.size() < 2:
 			continue
 			
@@ -184,19 +187,35 @@ func get_best_alternative_point()->Vector2:
 	
 	return shortest_path_point
 	
-func get_alternative_route()-> Vector2:
-	# TODO: Find a free area? how
-	var new_goal: Vector2 = Vector2.ZERO
-	return new_goal
+func start_rerouting(candidate: Vector2) -> void:
+	
+	# No path found
+	if not parent.forces.request_path(candidate):
+		return
+	
+	alternative_point = candidate
+	rerouting = true
+	
+	print(parent.name, " REROUTING to ", alternative_point)
+	parent.queue_redraw()
+	
+func update_rerouting() -> void:
+	var distance = parent.global_position.distance_to(alternative_point)
+	
+	if distance <= alternative_reached_distance:
+		print(parent.name, " reached alternative point")
 		
-func avoid_bottleneck()->void:
-	if is_route_congested():
-		print("route is congested bruh, go find another way")
-		
-		# TODO: Find a free area? how
-		var new_goal: Vector2 = get_alternative_route()
-		parent.forces.request_path(new_goal)
-		
-func reset()->void:
-	bottleneck_detected = false
+		# Reset rerouting, bottleneck and congestion check
+		reset()
+
+# Reset rerouting, bottleneck and congestion check
+func reset() -> void:
+	# cancel rerouting and navigate to original goal
+	if rerouting:
+		parent.forces.request_path(parent.goal)
+
+	rerouting = false
+	alternative_point = Vector2.ZERO
 	congestion_timer = 0.0
+	bottleneck_detected = false
+	parent.queue_redraw()

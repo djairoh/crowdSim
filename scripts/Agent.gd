@@ -93,6 +93,7 @@ func _physics_process(delta):
 	if movement_direction.length_squared() > 0.0001:
 		movement_direction = movement_direction.normalized()
 		
+	# TODO: Calculating desired velocity earlier since we use desired velocity for some forces calculations?
 	var target_max_speed: float = max_speed
 	
 	# Increase movement speed when panic
@@ -144,8 +145,16 @@ func _physics_process(delta):
 	queue_redraw()
 	
 func _draw():
-	if behaviours.bottleneck_avoidance.bottleneck_detected:
+	
+	var bottleneck_detected = behaviours.bottleneck_avoidance.bottleneck_detected
+	var rerouting = behaviours.bottleneck_avoidance.rerouting
+	
+	if rerouting:
+		modulate = Color.LIGHT_CORAL
+	elif bottleneck_detected:
 		modulate = Color.DARK_BLUE
+	else:
+		modulate = Color.WHITE
 	
 	if agent_state.is_fallen():
 		var fallen_color: Color
@@ -204,5 +213,8 @@ func _on_move_idle_timer_timeout() -> void:
 
 
 func _on_attraction_navigation_target_reached() -> void:
+	# Do not free queue for temporary rerouting
+	if behaviours.bottleneck_avoidance.rerouting:
+		return
 	# TODO: what do when goal is reached?		
 	self.queue_free()
