@@ -200,8 +200,5 @@ func _on_move_idle_timer_timeout() -> void:
 
 
 func _on_attraction_navigation_target_reached() -> void:
-	# TODO: what do when goal is reached?
-	if behaviours.bottleneck_avoidance.rerouting:
-		return
-		
+	# TODO: what do when goal is reached?		
 	self.queue_free()
