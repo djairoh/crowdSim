@@ -7,9 +7,9 @@ class_name CrowdAgent
 @onready var standing_collision: CollisionShape2D = $CollisionShape2D
 @onready var fallen_collision: CollisionShape2D = $FallenCollisionShape2D
 
-@onready var forces = $Forces
-@onready var repulsion = $Repulsion
-@onready var rules = $Rules
+@onready var forces: Forces = $Forces
+@onready var repulsion: Repulsion = $Repulsion
+@onready var rules: Rules = $Rules
 @onready var agent_state: AgentState = $AgentState
 @onready var behaviours: Behaviours = $Behaviours
 
@@ -27,7 +27,7 @@ var desired_rotation: float = self.rotation
 var desired_velocity: Vector2 = Vector2.ZERO
 var current_speed: float = 0.0
 
-func _ready():
+func _ready() -> void:
 	start_position = global_position
 	
 	if start_fallen:
@@ -45,11 +45,20 @@ func _process(delta: float) -> void:
 	if self.rotation != self.desired_rotation:
 		self.rotation = lerp_angle(self.rotation, self.desired_rotation, clampf(4*delta, 0, 1))
 
-func _physics_process(delta):
+func _physics_process(delta) -> void:
 	# Stop moving if agent falls.
 	if agent_state.is_fallen():
 		velocity = Vector2.ZERO
 		return
+		
+	# Calculating desired velocity earlier since we use desired velocity for some forces calculations?
+	var target_max_speed: float = max_speed
+	
+	# Increase movement speed when panic
+	if agent_state.is_panic():
+		target_max_speed *= panic_speed_multiplier
+		
+	self.desired_velocity = forces.get_desired_direction() * target_max_speed
 	
 	# Eq. (1) + Eq. (2)
 	var f_to = forces.get_total_force(true)
@@ -66,7 +75,7 @@ func _physics_process(delta):
 	rules.update_rules(delta)
 	
 	# Update agent state
-	#agent_state.update(delta)
+	agent_state.update(delta)
 	
 	# Update agent behaviours
 	behaviours.update(delta)
@@ -77,31 +86,18 @@ func _physics_process(delta):
 	# Fallen agents forces
 	var F_fa: Vector2 = forces.get_falling_agent_force()
 		
-	# TODO: CHANGE beta_i to represent falling agents
 	var beta_i: float = 0.0
 	
 	if F_fa.length_squared() > 0.0001:
 		beta_i = 0.5
 	
-	# movement_direction = normal desired direction + fallen agent avoidance
-	# movement_direction = ((1-βi[n]) * f_to_i[n]) + (βi[n] * F_fa_i[n])
-	var movement_direction: Vector2 = (
+	# movement_vector = normal desired direction + fallen agent avoidance
+	# movement_vector = ((1-βi[n]) * f_to_i[n]) + (βi[n] * F_fa_i[n])
+	var movement_vector: Vector2 = (
 		(1.0 - beta_i) * f_to
 		+ beta_i * F_fa
 	)
-	
-	if movement_direction.length_squared() > 0.0001:
-		movement_direction = movement_direction.normalized()
 		
-	# TODO: Calculating desired velocity earlier since we use desired velocity for some forces calculations?
-	var target_max_speed: float = max_speed
-	
-	# Increase movement speed when panic
-	if agent_state.is_panic():
-		target_max_speed *= panic_speed_multiplier
-		
-	self.desired_velocity = forces.get_desired_direction() * target_max_speed
-
 	# Update v_i[n].
 	# v_i[n] = min(v_i[n-1] + aT, v_i_MAX)
 	current_speed = min(current_speed + acceleration * delta, target_max_speed)
@@ -112,13 +108,13 @@ func _physics_process(delta):
 	# Instead of desired position, we use the change in position (displacement) to get velocity
 	#
 	# So we modify this equation for displacement
-	# p_i[n] = p_i[n-1] + alpha_i * v_i[n] * movement_direction * T + r_i
-	# p_i[n] - p_i[n-1] = alpha_i * v_i[n] * movement_direction * T + r_i
-	# displacement = alpha_i * v_i[n] * movement_direction * T + r_i
+	# p_i[n] = p_i[n-1] + alpha_i * v_i[n] * movement_vector * T + r_i
+	# p_i[n] - p_i[n-1] = alpha_i * v_i[n] * movement_vector * T + r_i
+	# displacement = alpha_i * v_i[n] * movement_vector * T + r_i
 	var displacement: Vector2 = (
 		alpha_i
 		* current_speed
-		* movement_direction
+		* movement_vector
 		* delta
 		+ r_i
 	)
@@ -134,28 +130,10 @@ func _physics_process(delta):
 		# Rotate agent to desired direction
 		self.desired_rotation = atan2(self.desired_velocity.y, self.desired_velocity.x)
 		
-		
-	#if movement_direction.length_squared() > 0.0001:
-		#self.desired_rotation = atan2(
-			#movement_direction.y,
-			#movement_direction.x
-		#)
-		#
 	move_and_slide()
 	queue_redraw()
 	
 func _draw():
-	
-	var bottleneck_detected = behaviours.bottleneck_avoidance.bottleneck_detected
-	var rerouting = behaviours.bottleneck_avoidance.rerouting
-	
-	if rerouting:
-		modulate = Color.LIGHT_CORAL
-	elif bottleneck_detected:
-		modulate = Color.DARK_BLUE
-	else:
-		modulate = Color.WHITE
-	
 	if agent_state.is_fallen():
 		var fallen_color: Color
 
@@ -172,12 +150,6 @@ func _draw():
 		
 	forces._draw()
 	repulsion._draw()
-	
-		
-	## Show panic agents
-	#if agent_state.is_panic():
-		#draw_circle(Vector2.ZERO, 6.0, Color.ORANGE_RED, true)
-
 	
 	if rules.stopping_rule:
 		draw_circle(Vector2.ZERO, 8.0, Color.RED, false, 2.0)

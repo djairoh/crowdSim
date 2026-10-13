@@ -1,4 +1,5 @@
 extends Node2D
+class_name Repulsion
 
 # Class to calculate the agent repulsion to the Wall, Other Obstacles and Other agents.
 # This class is also responsible for the pushing behaviour

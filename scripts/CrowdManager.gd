@@ -29,6 +29,8 @@ func _initialize_agent(agent: CrowdAgent):
 	# Set panic agents
 	if randf() < impatient_ratio:
 		agent.agent_state.set_impatient()
+	elif randf() < panic_ratio:
+		agent.agent_state.set_panic()
 	else:
 		agent.agent_state.set_normal()
 		

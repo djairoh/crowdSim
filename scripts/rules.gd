@@ -1,5 +1,5 @@
 extends Node2D
-
+class_name Rules
 # Class to calculate the StoppingRule (fix shaking behaviour) and WaitingRule (queuing)
 
 @onready var parent: CrowdAgent = get_parent()
