@@ -1,4 +1,5 @@
 extends Node
+class_name Forces
 
 # Class to calculate forces acting on an agent.
 # Each component is calculated separately, but the global direction of force can be requested using get_total_forces()
@@ -25,6 +26,10 @@ var f_to_prev: Vector2 = Vector2.ZERO
 
 # forces
 var F_wa: Vector2 = Vector2.ZERO
+var F_wa_left: Vector2 = Vector2.ZERO
+var F_wa_front: Vector2 = Vector2.ZERO
+var F_wa_right: Vector2 = Vector2.ZERO
+
 var F_ob: Vector2 = Vector2.ZERO
 var F_ot: Vector2 = Vector2.ZERO
 var F_at: Vector2 = Vector2.ZERO
@@ -108,10 +113,11 @@ func _get_force_from_raycast(ray: RayCast2D) -> Vector2:
 func calculate_wall_avoidance():
 	# Calculate the avoidance force of the walls using 3 Raycasts.
 	# FIXME: im seeing some weird behaviours when the wall is parallel to the agent. not sure how to fix that though
-	F_wa  = _get_force_from_raycast(wall_left)
-	F_wa += _get_force_from_raycast(wall_front)
-	F_wa += _get_force_from_raycast(wall_right)
-	F_wa = F_wa.normalized()
+	F_wa_left  = _get_force_from_raycast(wall_left)
+	F_wa_front = _get_force_from_raycast(wall_front)
+	F_wa_right = _get_force_from_raycast(wall_right)
+	F_wa = F_wa_left + F_wa_right + F_wa_front
+	#F_wa = F_wa.normalized()
 	# TODO: the individual components should be modulated by a weight factor w_wa_i. 
 	# The paper does not specify how these are calculated ://
 	
@@ -311,8 +317,8 @@ func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_attraction()
 	calculate_wall_avoidance()
-	calculate_object_avoidance()
-	calculate_other_agents_avoidance()
+	#calculate_object_avoidance()
+	#calculate_other_agents_avoidance()
 
 func get_total_force(update: bool = false) -> Vector2:
 	if update:
@@ -320,7 +326,9 @@ func get_total_force(update: bool = false) -> Vector2:
 		
 	# Paper did not define the weights so we define it ourselves
 	# Paper uses raw F_to but this will result in unbounded force accumulation.
-	F_to = f_to_prev + F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB
+	#F_to = f_to_prev + F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB
+	F_to = f_to_prev + F_at*W_AT + F_wa*W_WA
+	
 	
 	if F_to.length_squared() > 0.0001:
 		f_to = F_to.normalized()
@@ -335,6 +343,26 @@ func _draw():
 	# not technically an internal function as Node2D is not a canvasitem. we call this function from the parent instead.
 	if parent:
 		parent.draw_line(Vector2(0,0), F_wa*W_WA*10, Color.GOLDENROD, 2.0)
+		parent.draw_line(
+			Vector2.ZERO,
+			F_wa_left * 30.0,
+			Color.RED,
+			2.0
+		)
+
+		parent.draw_line(
+			Vector2.ZERO,
+			F_wa_front * 30.0,
+			Color.GREEN,
+			2.0
+		)
+
+		parent.draw_line(
+			Vector2.ZERO,
+			F_wa_right * 30.0,
+			Color.BLUE,
+			2.0
+	)
 		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 2.0)
 		parent.draw_line(Vector2(0,0), F_ob*W_OB*10, Color.ORCHID, 1.0)
 		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 2.0)
