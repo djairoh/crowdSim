@@ -47,7 +47,7 @@ func update(delta):
 			bottleneck_detected = true
 			parent.queue_redraw()
 
-			print(parent.name, " detects a bottleneck! Now lets find cadidate points!!!")
+			print(parent.name, " detects a bottleneck! Now lets find candidate points!")
 			# Find best alternative point from a list of candidate points
 			# and check if you can actually reach there
 			var candidate_point := get_best_alternative_point()

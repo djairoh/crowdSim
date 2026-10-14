@@ -15,7 +15,6 @@ var panic_ratio: float = 0.2
 var impatient_ratio: float = 0.2
 
 func _ready():
-	var viewport_size = get_viewport_rect().size
 	var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
 	call_deferred("_initialize_agent", agent)
 	add_child(agent)

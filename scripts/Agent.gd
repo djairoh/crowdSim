@@ -18,6 +18,7 @@ class_name CrowdAgent
 @export var acceleration: float = 10.0
 @export var max_movement: float = 10
 @export var start_fallen: bool = false
+@export var draw_debug: bool = false
 
 # refing to parent nodes like this is bad practice, but who caresssss 
 var crowd_manager: CrowdManager
@@ -33,13 +34,13 @@ func _ready() -> void:
 	if start_fallen:
 		behaviours.falling.fall()
 
-func set_crowd_manager(crowd_manager: CrowdManager):
-	self.crowd_manager = crowd_manager
+func set_crowd_manager(man: CrowdManager):
+	self.crowd_manager = man
 
 
-func request_path(goal: Vector2) -> bool:
-	self.goal = goal
-	return forces.request_path(goal)
+func request_path(g: Vector2) -> bool:
+	self.goal = g
+	return forces.request_path(g)
 
 func _process(delta: float) -> void:
 	if self.rotation != self.desired_rotation:
@@ -134,6 +135,9 @@ func _physics_process(delta) -> void:
 	queue_redraw()
 	
 func _draw():
+	if ! draw_debug:
+		return
+		
 	if agent_state.is_fallen():
 		var fallen_color: Color
 

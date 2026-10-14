@@ -152,7 +152,7 @@ func calculate_object_avoidance():
 			continue
 		
 		F_ob += tangential_component.normalized()
-	
+#	
 func calculate_other_agents_avoidance():	
 	# Reset force
 	F_ot = Vector2.ZERO
@@ -255,7 +255,6 @@ func calculate_attraction():
 	
 # TODO: Fix avoiding corpse	
 func get_falling_agent_force()-> Vector2:
-	var F_ta: Vector2 = Vector2.ZERO
 	var v_i: Vector2 = parent.desired_velocity
 	
 	if v_i.length_squared() <= 0.0001:
