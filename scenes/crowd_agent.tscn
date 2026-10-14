@@ -53,7 +53,6 @@ shape = SubResource("CircleShape2D_utciu")
 debug_color = Color(0.8368208, 0.36799604, 0.32875565, 0.41960785)
 
 [node name="FallenCollisionShape2D" type="CollisionShape2D" parent="." unique_id=1912315340]
-visible = false
 shape = SubResource("RectangleShape2D_wwv84")
 disabled = true
 
@@ -69,12 +68,12 @@ shape = SubResource("CircleShape2D_jm76c")
 debug_color = Color(0.67058825, 0, 0.0627451, 0.41960785)
 
 [node name="Forces" type="Node2D" parent="." unique_id=1431331718]
-visible = false
 script = ExtResource("3_xis0x")
 
 [node name="AttractionNavigation" type="NavigationAgent2D" parent="Forces" unique_id=37287173]
 path_desired_distance = 5.0
 target_desired_distance = 5.0
+path_postprocessing = 1
 path_metadata_flags = 0
 radius = 15.0
 neighbor_distance = 50.0
@@ -121,7 +120,6 @@ collision_mask = 2
 shape = SubResource("CircleShape2D_wwv84")
 
 [node name="Repulsion" type="Node2D" parent="." unique_id=1879718809]
-visible = false
 script = ExtResource("4_qt0yl")
 
 [node name="RepulsionArea" type="Area2D" parent="Repulsion" unique_id=1319361761]
@@ -183,6 +181,7 @@ target_position = Vector2(6, 0)
 hit_from_inside = true
 
 [node name="Rules" type="Node2D" parent="." unique_id=311322513]
+visible = false
 script = ExtResource("5_esi2g")
 
 [node name="WaitingArea" type="Area2D" parent="Rules" unique_id=444298579]
@@ -199,6 +198,7 @@ debug_color = Color(0.08235294, 0.7372549, 0, 0.41960785)
 autostart = true
 
 [node name="Behaviours" type="Node2D" parent="." unique_id=1039173932]
+visible = false
 script = ExtResource("7_wxnss")
 
 [node name="Falling" type="Node2D" parent="Behaviours" unique_id=720798026]

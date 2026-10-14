@@ -91,7 +91,6 @@ func _update_repulsion():
 	if not parent.agent_state.is_fallen() and should_fall():
 		parent.behaviours.falling.fall()
 	
-# TODO: Calcualte total repulsion
 func get_total_repulsion(update: bool = false) -> Vector2:
 	if update:
 		_update_repulsion()
@@ -103,10 +102,12 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 		lambda = 0.3
 	
 	# Eq. (10)
-	return F_r_wa + F_r_ob + (lambda * F_r_ot)
+	return F_r_ob + (lambda * F_r_ot)
 
+# FIXME: this does not work sometimes; im seeing agents pushing *into* a wall they're right next to.
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
+	return
 	
 	# Key: wall normal (n_w), Value: wall distance (d_wi)
 	var wall_hits: Dictionary = {}

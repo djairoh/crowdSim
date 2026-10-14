@@ -11,7 +11,7 @@ var spawn_goal_pairs: Dictionary
 @onready var tiles = $TileMapLayer
 
 func _ready() -> void:
-	$NavigationRegion2D.bake_navigation_polygon()
+	# $NavigationRegion2D.bake_navigation_polygon()
 	goals.append_array(_get_tiles_with_property("is_goal"))
 	spawns.append_array(_get_tiles_with_property("is_spawn"))
 		

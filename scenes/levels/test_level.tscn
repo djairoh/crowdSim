@@ -1894,8 +1894,6 @@ sources/2 = SubResource("TileSetAtlasSource_88ety")
 sources/3 = SubResource("TileSetAtlasSource_ahbqi")
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_utciu"]
-vertices = PackedVector2Array(742, 390, 742, 582, 730, 490, 730, 454, 794, 186, 794, 118, 806, 106, 806, 390, 726, 118, 726, 186, 714, 154, 714, 118, 522, 106, 678, 118, 630, 454, 522, 294, 522, 266, 586, 170, 678, 154, 666, 154, 614, 154, 586, 118, 614, 118, 298, 250, 298, 234, 486, 234, 486, 266, 666, 118, 534, 118, 534, 170, 666, 554, 666, 490, 522, 582, 630, 554, 298, 294, 298, 278, 262, 278, 262, 294, 10, 294, 10, 10, 262, 10, 262, 250)
-polygons = Array[PackedInt32Array]([PackedInt32Array(0, 1, 2, 3), PackedInt32Array(4, 5, 6, 7), PackedInt32Array(8, 9, 10, 11), PackedInt32Array(12, 6, 5, 8), PackedInt32Array(12, 8, 11), PackedInt32Array(12, 11, 13), PackedInt32Array(14, 15, 16, 17, 18, 10, 9, 0, 3), PackedInt32Array(19, 18, 17), PackedInt32Array(20, 19, 17), PackedInt32Array(20, 17, 21, 22), PackedInt32Array(4, 7, 0, 9), PackedInt32Array(23, 24, 25, 26), PackedInt32Array(13, 18, 19, 27), PackedInt32Array(12, 13, 27), PackedInt32Array(12, 27, 22), PackedInt32Array(12, 22, 21), PackedInt32Array(12, 21, 28), PackedInt32Array(16, 12, 28, 29), PackedInt32Array(30, 31, 2, 1), PackedInt32Array(30, 1, 32, 33), PackedInt32Array(33, 32, 15, 14), PackedInt32Array(15, 34, 35, 26, 16), PackedInt32Array(36, 37, 38, 39), PackedInt32Array(39, 40, 41), PackedInt32Array(36, 39, 41), PackedInt32Array(35, 36, 41, 23, 26), PackedInt32Array(16, 29, 17)])
 parsed_collision_mask = 4294967041
 source_geometry_mode = 2
 source_geometry_group_name = &"geometry"
@@ -1909,5 +1907,4 @@ tile_map_data = PackedByteArray("AAAyAAYAAQACAAAAAAAxAAYAAQABAAAAAAAwAAYAAQAHAAM
 tile_set = SubResource("TileSet_ruvn8")
 
 [node name="NavigationRegion2D" type="NavigationRegion2D" parent="." unique_id=2119025671]
-visible = false
 navigation_polygon = SubResource("NavigationPolygon_utciu")

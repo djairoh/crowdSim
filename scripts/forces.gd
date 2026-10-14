@@ -253,7 +253,7 @@ func calculate_attraction():
 	# base navigation
 	F_at = parent.desired_velocity.normalized()
 	
-# TODO: Fix avoiding corpse	
+# TODO: Fix avoiding corpse
 func get_falling_agent_force()-> Vector2:
 	var v_i: Vector2 = parent.desired_velocity
 	
@@ -316,8 +316,8 @@ func _update_forces():
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
 	calculate_attraction()
 	calculate_wall_avoidance()
-	#calculate_object_avoidance()
-	#calculate_other_agents_avoidance()
+	calculate_object_avoidance()
+	calculate_other_agents_avoidance()
 
 func get_total_force(update: bool = false) -> Vector2:
 	if update:
@@ -365,10 +365,10 @@ func _draw():
 		parent.draw_line(Vector2(0,0), F_at*W_AT*10, Color.SIENNA, 2.0)
 		parent.draw_line(Vector2(0,0), F_ob*W_OB*10, Color.ORCHID, 1.0)
 		parent.draw_line(Vector2(0,0), F_ot*W_OT*10, Color.TOMATO, 2.0)
-		parent.draw_line(Vector2(0,0), f_to * 30.0, Color.WHITE, 2.0)
+		parent.draw_line(Vector2(0,0), f_to * 10.0, Color.WHITE, 2.0)
 		parent.draw_line(
 			Vector2(0,0),
-			parent.desired_velocity.normalized() * 30.0,
+			parent.desired_velocity.normalized() * 10.0,
 			Color.CYAN,
 			2.0
 		)
