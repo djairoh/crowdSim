@@ -1,13 +1,14 @@
 [gd_scene format=3 uid="uid://37eitlkio1jt"]
 
 [ext_resource type="Script" uid="uid://bmn3swhh128pg" path="res://scripts/CrowdManager.gd" id="1_pyr1s"]
+[ext_resource type="PackedScene" uid="uid://3qbsm3k1q0a0" path="res://scenes/levels/test_wallrepulsion.tscn" id="2_ikxhy"]
 [ext_resource type="Script" uid="uid://sddjjqha0rpt" path="res://scripts/camera.gd" id="2_y2edp"]
-[ext_resource type="PackedScene" uid="uid://btjvo4a8pdby5" path="res://scenes/levels/test_level.tscn" id="3_uomoh"]
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
+max_agents = 2
 
-[node name="level" parent="." unique_id=820105770 instance=ExtResource("3_uomoh")]
+[node name="level" parent="." unique_id=1906395005 instance=ExtResource("2_ikxhy")]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1584936411]
 script = ExtResource("2_y2edp")
@@ -16,4 +17,10 @@ script = ExtResource("2_y2edp")
 wait_time = 1.198
 autostart = true
 
+[node name="door_toggle_timer" type="Timer" parent="." unique_id=479067285]
+wait_time = 5.0
+one_shot = true
+autostart = true
+
 [connection signal="timeout" from="agent_spawn_timer" to="." method="_on_agent_spawn_timer_timeout"]
+[connection signal="timeout" from="door_toggle_timer" to="." method="_on_door_toggle_timer_timeout"]

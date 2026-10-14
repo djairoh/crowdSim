@@ -2,6 +2,7 @@ extends CharacterBody2D
 class_name CrowdAgent
 
 # this class models an individual in a crowd
+signal despawned(agent: CrowdAgent);
 
 # collision shapes for agents
 @onready var standing_collision: CollisionShape2D = $CollisionShape2D
@@ -32,6 +33,7 @@ func _ready() -> void:
 	start_position = global_position
 	
 	if start_fallen:
+		self.set_process_mode(Node.PROCESS_MODE_DISABLED)
 		behaviours.falling.fall()
 
 func set_crowd_manager(man: CrowdManager):
@@ -192,5 +194,6 @@ func _on_attraction_navigation_target_reached() -> void:
 	# Do not free queue for temporary rerouting
 	if behaviours.bottleneck_avoidance.rerouting:
 		return
-	# TODO: what do when goal is reached?		
+	# TODO: what do when goal is reached?
+	despawned.emit(self)
 	self.queue_free()
