@@ -6,7 +6,6 @@
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
-max_agents = 2
 
 [node name="level" parent="." unique_id=1906395005 instance=ExtResource("2_ikxhy")]
 
