@@ -40,10 +40,10 @@ var F_fa: Vector2 = Vector2.ZERO
 var right_preference_angle_degrees: float = 20.0
 
 # Rectangle of influence forward vision
-@onready var forward_vision_collision: CollisionShape2D = %ForwardVisionCollisionShape2D
+@onready var forward_vision_collision: CollisionShape2D = $RecOfInfluence/ForwardVisionCollisionShape2D
 
 # Fallen agent area
-@onready var fallen_agent_area: Area2D = %FallenAgentArea
+@onready var fallen_agent_area: Area2D = $FallenAgentArea
 @onready var fallen_agent_body_area: Area2D = %FallingBodyArea
 
 @onready var parent: CrowdAgent = get_parent()

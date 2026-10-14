@@ -23,8 +23,8 @@ var min_agent_repulsion_count: int = 3
 @export_range(-1.0, 1.0) var fall_alignment_threshold: float = 0.7
 
 @onready var parent: CrowdAgent = get_parent()
-@onready var repulsion_collision: CollisionShape2D = %CollisionShape2D
-@onready var wall_repulsion_rays: Node2D = %WallRepulsionRays
+@onready var repulsion_collision: CollisionShape2D = $RepulsionArea/CollisionShape2D
+@onready var wall_repulsion_rays: Node2D = $WallRepulsionRays
 
 # Agent's Repulsion Area collision box radius
 # Agent's personal space (ε_i)

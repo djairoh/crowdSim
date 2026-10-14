@@ -7,7 +7,7 @@ class_name Behaviours
 @onready var parent: CrowdAgent = get_parent()
 
 @onready var falling: Falling = $Falling
-@onready var bottleneck_avoidance: BottleneckAvoidance = %BottleneckAvoidance
+@onready var bottleneck_avoidance: BottleneckAvoidance = $BottleneckAvoidance
 
 
 func update(delta: float) -> void:
