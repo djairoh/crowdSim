@@ -45,7 +45,7 @@ var min_agent_repulsion_count: int = 3
 @export var normal_personal_space: float = 4.0
 @export var panic_personal_space: float = 0.0
 # TODO: check paper
-@export var impatient_personal_space: float = 0.0
+@export var impatient_personal_space: float = 4.0
 
 func _update_personal_space() -> void:
 	if parent.agent_state.is_panic():
@@ -114,14 +114,14 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 		)
 	
 	# Eq. (10)
-	#return F_r_ob + (lambda * F_r_ot) # this is fine
-	return F_r_wa + F_r_ob + (lambda * F_r_ot)
+	return F_r_ob + (lambda * F_r_ot) # this is fine
+	#return F_r_wa + F_r_ob + (lambda * F_r_ot)
 	
 
 # FIXME: this does not work sometimes; im seeing agents pushing *into* a wall they're right next to.
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
-	# return
+	return
 	
 	# Key: wall normal (n_w), Value: wall distance (d_wi)
 	var wall_hits: Dictionary = {}
@@ -143,8 +143,7 @@ func calculate_wall_repulsion():
 		var n_w: Vector2 = ray.get_collision_normal()
 		
 		# d_wi = shortest distance from the center of agent i to the wall w
-		var d_wi: float = abs((parent.global_position - wall_collision_point).dot(n_w)
-)
+		var d_wi: float = abs((parent.global_position - wall_collision_point).dot(n_w))
 		if d_wi <= 0.0001:
 			continue
 			
