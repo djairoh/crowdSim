@@ -6,9 +6,6 @@
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
-panic_ratio = null
-impatient_ratio = null
-max_agents = null
 
 [node name="level" parent="." unique_id=1906395005 instance=ExtResource("2_ikxhy")]
 
@@ -16,11 +13,11 @@ max_agents = null
 script = ExtResource("2_y2edp")
 
 [node name="agent_spawn_timer" type="Timer" parent="." unique_id=619401515]
-wait_time = 1.865
+wait_time = 0.824
 autostart = true
 
 [node name="door_toggle_timer" type="Timer" parent="." unique_id=479067285]
-wait_time = 3.159
+wait_time = 6.524
 one_shot = true
 autostart = true
 

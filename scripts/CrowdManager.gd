@@ -12,14 +12,16 @@ class_name CrowdManager
 var panic_ratio: float = 0.2
 
 @export_range(0.0, 1.0)
-var impatient_ratio: float = 0.2
+var impatient_ratio: float = 0.5
 
 @export var max_agents: int = 200
 var num_agents: int = 0
 var agents: Array
 
 func _ready():
-	pass
+	# DEBUG: for debugging only
+	print("Portals: ", lvl.portals)
+	# pass
 
 
 func _spawn_agent():

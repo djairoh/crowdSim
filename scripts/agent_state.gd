@@ -26,7 +26,9 @@ const DENSITY_THRESHOLD: int = 8
 const DENSITY_PANIC_RATE: float = 0.05
 
 func update(delta: float) -> void:
-	update_panic(delta)
+	pass
+	# TODO: ignore panic propagation for now to test bottleneck avoidance
+	#update_panic(delta)
 
 # Set the states
 func set_normal() -> void:
