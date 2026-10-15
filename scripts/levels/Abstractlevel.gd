@@ -5,6 +5,9 @@ class_name AbstractLevel
 # for each of our scenarios we should subclass this one
 # or really just subclass the whole AbstractLevel scene tbh 
 
+const DOOR_OPENED_TILE_ID = 5
+const DOOR_CLOSED_TILE_ID = 4
+
 var goals: Array
 var spawns: Array
 var door_cells: Array
@@ -24,14 +27,26 @@ func get_random_spawn() -> Vector2:
 	return spawns.pick_random()
 	# TODO: what if no spawns?
 
+func is_door_open(cell: Vector2i) -> bool:
+	var tile_data = tiles.get_cell_tile_data(cell)
+
+	return (
+		tile_data != null
+		and tile_data.get_custom_data("is_door")
+		and tile_data.get_custom_data("is_open")
+	)
+
 func toggle_all_doors():
 	for cell in door_cells:
 		var tile_data = tiles.get_cell_tile_data(cell)
 		if tile_data:
-			if tile_data.get_custom_data("is_door"):
-				tiles.set_cell(cell, 1, tiles.get_cell_atlas_coords(cell))
-			else:
-				tiles.set_cell(cell, 4, tiles.get_cell_atlas_coords(cell))
+			var is_open = tile_data.get_custom_data("is_open")
+			tiles.set_cell(
+				cell, 
+				DOOR_CLOSED_TILE_ID if is_open else DOOR_OPENED_TILE_ID, 
+				tiles.get_cell_atlas_coords(cell)
+			)
+
 
 func _get_door_poss():
 	for cell in tiles.get_used_cells():
