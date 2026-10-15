@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://vtiwc8dlerq1" path="res://scripts/levels/TestLevel.gd" id="1_tmr53"]
 [ext_resource type="Texture2D" uid="uid://d24tyoo5dcsjt" path="res://assets/goals.png" id="6_4asn1"]
 [ext_resource type="Texture2D" uid="uid://wut6dg6a5168" path="res://assets/navigables.png" id="7_dw7u0"]
-[ext_resource type="Texture2D" uid="uid://bhifbfj4e80ma" path="res://assets/obstacles.png" id="8_fyxdr"]
+[ext_resource type="Texture2D" uid="uid://bhifbfj4e80ma" path="res://assets/walls.png" id="8_fyxdr"]
 [ext_resource type="Texture2D" uid="uid://p1sctca5pwhx" path="res://assets/spawns.png" id="9_kpk0m"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_h4hsr"]

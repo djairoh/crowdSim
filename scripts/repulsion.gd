@@ -101,13 +101,27 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 	if F_r_wa.length_squared() > 0 or F_r_ob.length_squared() > 0:
 		lambda = 0.3
 	
+	if (
+		F_r_wa.length_squared() > 0.000001
+		and F_r_ot.length_squared() > 0.000001
+	):
+		# DEBUG: Check to see if wall repulsion is larger or smaller than agent repulsions
+		print(
+			parent.name,
+			" | Wall: ", F_r_wa,
+			" | Agent: ", lambda * F_r_ot,
+			" | Total: ", F_r_wa + F_r_ob + lambda * F_r_ot
+		)
+	
 	# Eq. (10)
-	return F_r_ob + (lambda * F_r_ot)
+	#return F_r_ob + (lambda * F_r_ot) # this is fine
+	return F_r_wa + F_r_ob + (lambda * F_r_ot)
+	
 
 # FIXME: this does not work sometimes; im seeing agents pushing *into* a wall they're right next to.
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
-	return
+	# return
 	
 	# Key: wall normal (n_w), Value: wall distance (d_wi)
 	var wall_hits: Dictionary = {}
@@ -117,7 +131,9 @@ func calculate_wall_repulsion():
 		var ray = child as RayCast2D
 		if ray == null:
 			continue
-	
+			
+		ray.force_raycast_update()
+		
 		if not ray.is_colliding():
 			continue
 
@@ -126,9 +142,9 @@ func calculate_wall_repulsion():
 		# n_w = wall normal
 		var n_w: Vector2 = ray.get_collision_normal()
 		
-		# d_wi = distance to wall collision point
-		var d_wi: float = parent.global_position.distance_to(wall_collision_point)
-		
+		# d_wi = shortest distance from the center of agent i to the wall w
+		var d_wi: float = abs((parent.global_position - wall_collision_point).dot(n_w)
+)
 		if d_wi <= 0.0001:
 			continue
 			
@@ -236,7 +252,7 @@ func calculate_other_agent_repulsion():
 		var repulsion_force: Vector2 = direction_away * overlap
 		
 		# Eq. (13)
-		F_r_ot += direction_away * overlap
+		F_r_ot += repulsion_force
 		
 		# retain repulsion force
 		agent_repulsion_forces.append(repulsion_force)

@@ -13,7 +13,7 @@ script = ExtResource("1_pyr1s")
 script = ExtResource("2_y2edp")
 
 [node name="agent_spawn_timer" type="Timer" parent="." unique_id=619401515]
-wait_time = 1.198
+wait_time = 1.8649999999999998
 autostart = true
 
 [node name="door_toggle_timer" type="Timer" parent="." unique_id=479067285]

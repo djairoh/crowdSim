@@ -121,6 +121,12 @@ shape = SubResource("CircleShape2D_wwv84")
 
 [node name="Repulsion" type="Node2D" parent="." unique_id=1879718809]
 script = ExtResource("4_qt0yl")
+fall_force_threshold = null
+fall_alignment_threshold = null
+personal_space = null
+normal_personal_space = null
+panic_personal_space = null
+impatient_personal_space = null
 
 [node name="RepulsionArea" type="Area2D" parent="Repulsion" unique_id=1319361761]
 collision_layer = 0
