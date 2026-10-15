@@ -325,9 +325,7 @@ func get_total_force(update: bool = false) -> Vector2:
 		
 	# Paper did not define the weights so we define it ourselves
 	# Paper uses raw F_to but this will result in unbounded force accumulation.
-	#F_to = f_to_prev + F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB
-	F_to = f_to_prev + F_at*W_AT + F_wa*W_WA
-	
+	F_to = f_to_prev + F_at*W_AT + F_wa*W_WA + F_ot*W_OT + F_ob*W_OB	
 	
 	if F_to.length_squared() > 0.0001:
 		f_to = F_to.normalized()
