@@ -42,6 +42,7 @@ input_pickable = true
 motion_mode = 1
 safe_margin = 3.683
 script = ExtResource("1_ptrki")
+draw_debug = true
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=1262027492]
 position = Vector2(-3.2782555e-07, -2.3841858e-07)
@@ -181,7 +182,6 @@ target_position = Vector2(6, 0)
 hit_from_inside = true
 
 [node name="Rules" type="Node2D" parent="." unique_id=311322513]
-visible = false
 script = ExtResource("5_esi2g")
 
 [node name="WaitingArea" type="Area2D" parent="Rules" unique_id=444298579]
@@ -198,7 +198,6 @@ debug_color = Color(0.08235294, 0.7372549, 0, 0.41960785)
 autostart = true
 
 [node name="Behaviours" type="Node2D" parent="." unique_id=1039173932]
-visible = false
 script = ExtResource("7_wxnss")
 
 [node name="Falling" type="Node2D" parent="Behaviours" unique_id=720798026]
@@ -217,6 +216,7 @@ debug_color = Color(1, 0.6, 0.69803923, 0.41960785)
 script = ExtResource("9_tdbcq")
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
+[connection signal="stateChange" from="AgentState" to="." method="_on_agent_state_state_change"]
 [connection signal="target_reached" from="Forces/AttractionNavigation" to="." method="_on_attraction_navigation_target_reached"]
 [connection signal="body_entered" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_entered"]
 [connection signal="body_exited" from="Forces/RecOfInfluence" to="Forces" method="_on_rec_of_influence_body_exited"]

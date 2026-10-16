@@ -197,3 +197,12 @@ func _on_attraction_navigation_target_reached() -> void:
 	# TODO: what do when goal is reached?
 	despawned.emit(self)
 	self.queue_free()
+
+
+func _on_agent_state_state_change(state: AgentState.states) -> void:
+	var processing =  state != agent_state.states.FALLEN
+	$Forces.set_process(processing)
+	$Repulsion.set_process(processing)
+	$Rules.set_process(processing)
+	get_node("Behaviours/Falling").set_process(!processing) # disable falling unless fallen
+	get_node("Behaviours/BottleneckAvoidance").set_process(processing) # enable bottleneck avoidance only when not fallen

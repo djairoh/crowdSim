@@ -10,6 +10,8 @@ class_name AgentState
 @onready var panic_area: Area2D = $PanicArea
 
 
+signal stateChange(state: states)
+
 enum states {
 	NORMAL,
 	PANIC,
@@ -30,22 +32,25 @@ func update(delta: float) -> void:
 	# TODO: ignore panic propagation for now to test bottleneck avoidance
 	#update_panic(delta)
 
+
 # Set the states
+func _set_state(state: states, color: Color) -> void:
+	current_state = state
+	sprite.modulate = color
+	stateChange.emit(current_state)
+
 func set_normal() -> void:
-	current_state = states.NORMAL
-	sprite.modulate = Color.LIGHT_BLUE
+	_set_state(states.NORMAL, Color.LIGHT_BLUE)
 	
 func set_panic() -> void:
-	current_state = states.PANIC
-	sprite.modulate = Color.RED
+	_set_state(states.PANIC, Color.RED)
 
 func set_impatient() -> void:
-	current_state = states.IMPATIENT
-	sprite.modulate = Color.YELLOW
+	_set_state(states.IMPATIENT, Color.YELLOW)
 	
 func set_fallen() -> void:
-	current_state = states.FALLEN
-	sprite.modulate = Color.WEB_PURPLE
+	_set_state(states.FALLEN, Color.WEB_PURPLE)
+
 	
 # Check agent state
 func is_normal() -> bool:
@@ -59,6 +64,7 @@ func is_impatient() -> bool:
 	
 func is_fallen() -> bool:
 	return current_state == states.FALLEN
+
 	
 # Turn into a panicked agent if conditions are met (communication, pushing, density panic)
 # NOTE: These conditions we defined ourselves and based loosely on the paper, 
