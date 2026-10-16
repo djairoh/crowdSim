@@ -30,6 +30,13 @@ var retry_timer: float = 0.0
 var rerouting: bool = false
 var alternative_point: Vector2 = Vector2.ZERO
 
+# Remember alternative portals that failed recently.
+# Key: portal position
+# Value: remaining cooldown in seconds
+var failed_portals: Dictionary = {}
+
+@export var failed_portal_cooldown: float = 15.0
+
 @export var alternative_reached_distance: float = 12.0
 @export var rerouting_timeout: float = 5.0
 var rerouting_timer: float = 0.0
@@ -42,6 +49,8 @@ func update(delta: float) -> void:
 		if rerouting or bottleneck_detected:
 			reset()
 		return
+	
+	update_failed_portals(delta)
 
 	retry_timer = maxf(retry_timer - delta, 0.0)
 
@@ -82,6 +91,19 @@ func update(delta: float) -> void:
 
 	print(parent.name, " BEST alternative: ", candidate)
 	start_rerouting(candidate)
+
+func mark_portal_failed(portal: Vector2) -> void:
+	failed_portals[portal] = failed_portal_cooldown
+
+	print(parent.name, " temporarily avoiding portal ", portal)
+
+
+func update_failed_portals(delta: float) -> void:
+	for portal in failed_portals.keys():
+		failed_portals[portal] -= delta
+
+		if failed_portals[portal] <= 0.0:
+			failed_portals.erase(portal)
 
 
 func is_route_congested() -> bool:
@@ -147,7 +169,7 @@ func get_congested_portal(
 
 	var congested_portal: Vector2 = Vector2.ZERO
 	var closest_distance: float = INF
-
+	
 	for portal_pos in open_portals:
 		var distance: float = distance_to_path(
 			portal_pos,
@@ -215,8 +237,13 @@ func get_best_alternative_point() -> Vector2:
 	var best_point: Vector2 = Vector2.ZERO
 
 	for portal_pos in open_portals:
-		# Never choose the congested doorway itself.
+		# Don't choose the congested doorway.
 		if portal_pos == congested_portal:
+			continue
+
+		# Don't retry a recently failed alternative.
+		if failed_portals.has(portal_pos):
+			print(parent.name, " SKIPPING failed portal: ", portal_pos)
 			continue
 
 		# Current position -> alternative portal.
@@ -279,14 +306,10 @@ func get_best_alternative_point() -> Vector2:
 
 func start_rerouting(candidate: Vector2) -> void:
 	var success: bool = parent.forces.request_path(candidate)
-	
 
 	if not success:
-		# request_path() sets the navigation target even
-		# when its reachability check returns false.
-		# Restore the original destination.
 		parent.forces.request_path(parent.goal)
-
+		mark_portal_failed(candidate)
 		print(parent.name, " failed to reroute to ", candidate)
 		return
 
@@ -316,8 +339,10 @@ func update_rerouting(delta: float) -> void:
 		rerouting_timer += delta
 
 	if rerouting_timer >= rerouting_timeout:
-		print(parent.name, " rerouting stalled")
+		print(parent.name, " rerouting stalled at ", alternative_point)
+		mark_portal_failed(alternative_point)
 		reset()
+		
 
 func reset() -> void:
 	if rerouting:
