@@ -4,43 +4,12 @@ class_name PortalSelection
 # Select eligible portal to avoid bottleneck
 @onready var parent: CrowdAgent = get_parent().get_parent().get_parent()
 @onready var rerouting: PortalRerouting = $"../PortalRerouting"
+@onready var paths: PathEvaluation = $PathEvaluation
 
-# How close a navigation path must pass to a doorway.
-const PORTAL_PATH_TOLERANCE: float = 16.0
 const PORTAL_BYPASS_MARGIN: float = 12.0
-
-# Tolerance for checking navigation path endpoints.
-const PATH_ENDPOINT_TOLERANCE: float = 12.0
 
 # Print portal selection and path evaluation decisions.
 @export var debug_selection: bool = true
-
-# Find the shortest distance from a point to a path.
-func distance_to_path(
-	point: Vector2,
-	path: PackedVector2Array
-) -> float:
-	if path.is_empty():
-		return INF
-
-	var closest_distance: float = INF
-
-	for i in range(path.size() - 1):
-		var closest_point: Vector2 = (
-			Geometry2D.get_closest_point_to_segment(
-				point,
-				path[i],
-				path[i + 1]
-			)
-		)
-
-		closest_distance = minf(
-			closest_distance,
-			point.distance_to(closest_point)
-		)
-
-	return closest_distance
-
 
 # Identify the congested portal on the agent's intended route
 func get_congested_portal(
@@ -57,14 +26,14 @@ func get_congested_portal(
 		)
 	)
 
-	if not is_path_usable(current_path, parent.goal):
+	if not paths.is_path_usable(current_path, parent.goal):
 		return Vector2.ZERO
 
 	var congested_portal: Vector2 = Vector2.ZERO
 	var closest_distance: float = INF
 	
 	for portal_pos in open_portals:
-		var distance: float = distance_to_path(
+		var distance: float = paths.distance_to_path(
 			portal_pos,
 			current_path
 		)
@@ -74,35 +43,10 @@ func get_congested_portal(
 			congested_portal = portal_pos
 
 	# Congestion not associated with a portal on this route.
-	if closest_distance > PORTAL_PATH_TOLERANCE:
+	if closest_distance > paths.PORTAL_PATH_TOLERANCE:
 		return Vector2.ZERO
 
 	return congested_portal
-
-
-func is_path_usable(
-	path: PackedVector2Array,
-	target: Vector2
-) -> bool:
-	if path.size() < 2:
-		return false
-
-	# NavigationServer2D can return a partial path.
-	# Make sure the final point actually reaches the target.
-	if path[path.size() - 1].distance_to(target) > PATH_ENDPOINT_TOLERANCE:
-		return false
-
-	return true
-
-
-func get_path_length(path: PackedVector2Array) -> float:
-	var total_length: float = 0.0
-
-	for i in range(path.size() - 1):
-		total_length += path[i].distance_to(path[i + 1])
-
-	return total_length
-
 
 func get_best_alternative_point(
 	excluded_portal: Vector2 = Vector2.ZERO
@@ -156,7 +100,7 @@ func get_best_alternative_point(
 			)
 		)
 
-		if not is_path_usable(path_to_portal, portal_pos):
+		if not paths.is_path_usable(path_to_portal, portal_pos):
 			if debug_selection:
 				print(parent.name, " REJECT ", portal_pos, ": cannot reach portal")
 			continue
@@ -171,31 +115,31 @@ func get_best_alternative_point(
 			)
 		)
 
-		if not is_path_usable(path_to_goal, parent.goal):
+		if not paths.is_path_usable(path_to_goal, parent.goal):
 			if debug_selection:
 				print(parent.name, " REJECT ", portal_pos, ": cannot reach goal")
 			continue
 
 		# Reject alternatives that still require passing through the congested doorway.
 		if (
-			distance_to_path(congested_portal, path_to_portal)
-			<= PORTAL_PATH_TOLERANCE
+			paths.distance_to_path(congested_portal, path_to_portal)
+			<= paths.PORTAL_PATH_TOLERANCE
 		):
 			if debug_selection:
 				print(parent.name, " REJECT ", portal_pos, ": path crosses excluded portal")
 			continue
 
 		if (
-			distance_to_path(congested_portal, path_to_goal)
-			<= PORTAL_PATH_TOLERANCE
+			paths.distance_to_path(congested_portal, path_to_goal)
+			<= paths.PORTAL_PATH_TOLERANCE
 		):
 			if debug_selection:
 				print(parent.name, " REJECT ", portal_pos, ": continuation crosses excluded portal")
 			continue
 
 		var total_length: float = (
-			get_path_length(path_to_portal)
-			+ get_path_length(path_to_goal)
+			paths.get_path_length(path_to_portal)
+			+ paths.get_path_length(path_to_goal)
 		)
 
 		if debug_selection:
@@ -223,17 +167,17 @@ func should_cancel_passed_portal_reroute() -> bool:
 		true
 	)
 
-	if not is_path_usable(direct_path, parent.goal):
+	if not paths.is_path_usable(direct_path, parent.goal):
 		return false
 
 	# The direct route must not pass through the selected alternative.
-	if distance_to_path(rerouting.alternative_point, direct_path) <= PORTAL_PATH_TOLERANCE:
+	if paths.distance_to_path(rerouting.alternative_point, direct_path) <= paths.PORTAL_PATH_TOLERANCE:
 		return false
 
 	# The direct route must not pass through the original congested portal
 	# or any other portal currently being avoided.
 	for portal in rerouting.failed_portals.keys():
-		if distance_to_path(portal, direct_path) <= PORTAL_PATH_TOLERANCE:
+		if paths.distance_to_path(portal, direct_path) <= paths.PORTAL_PATH_TOLERANCE:
 			return false
 
 	# Current position -> selected alternative portal.
@@ -244,7 +188,7 @@ func should_cancel_passed_portal_reroute() -> bool:
 		true
 	)
 
-	if not is_path_usable(path_to_portal, rerouting.alternative_point):
+	if not paths.is_path_usable(path_to_portal, rerouting.alternative_point):
 		return false
 
 	# Selected alternative portal -> original goal.
@@ -255,14 +199,14 @@ func should_cancel_passed_portal_reroute() -> bool:
 		true
 	)
 
-	if not is_path_usable(portal_to_goal_path, parent.goal):
+	if not paths.is_path_usable(portal_to_goal_path, parent.goal):
 		return false
 
-	var direct_length: float = get_path_length(direct_path)
+	var direct_length: float = paths.get_path_length(direct_path)
 
 	var via_portal_length: float = (
-		get_path_length(path_to_portal)
-		+ get_path_length(portal_to_goal_path)
+		paths.get_path_length(path_to_portal)
+		+ paths.get_path_length(portal_to_goal_path)
 	)
 
 	return direct_length + PORTAL_BYPASS_MARGIN < via_portal_length
