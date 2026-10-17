@@ -9,6 +9,7 @@ const VISIBLE_AGENTS_THRESHOLD: int = 3
 
 # How close a navigation path must pass to a doorway.
 const PORTAL_PATH_TOLERANCE: float = 16.0
+const PORTAL_BYPASS_MARGIN: float = 12.0
 
 # Tolerance for checking navigation path endpoints.
 const PATH_ENDPOINT_TOLERANCE: float = 12.0
@@ -41,16 +42,12 @@ var failed_portals: Dictionary = {}
 @export var alternative_reached_distance: float = 12.0
 @export var rerouting_timeout: float = 5.0
 @export var reroute_congestion_radius: float = 48.0
-# Remember the doorway that originally caused rerouting.
-var original_congested_portal: Vector2 = Vector2.ZERO
 
 # Only visible slow agents near the selected portal count.
 @export var portal_local_crowd_radius: float = 48.0
 @export var debug_rerouting: bool = true
 
 var rerouting_timer: float = 0.0
-var previous_distance: float = INF
-const MIN_PROGRESS: float = 0.1
 
 @export var portal_detection_radius: float = 96.0
 
@@ -213,34 +210,6 @@ func is_route_congested() -> bool:
 		and (already_congested or congestion_ahead)
 	)
 	
-# Count only slow agents the rerouting agent can actually see near its selected portal.
-func get_visible_portal_congestion(portal: Vector2) -> int:
-	var count: int = 0
-	var forward: Vector2 = parent.desired_velocity.normalized()
-	if forward == Vector2.ZERO:
-		return 0
-
-	for agent in parent.forces.visible_agents:
-		if not is_instance_valid(agent) or agent == parent:
-			continue
-		if agent.global_position.distance_to(portal) > portal_local_crowd_radius:
-			continue
-		var to_agent: Vector2 = agent.global_position - parent.global_position
-		var forward_distance: float = forward.dot(to_agent)
-		if forward_distance <= 0.0 or forward_distance > early_detection_distance:
-			continue
-		if absf(forward.cross(to_agent)) > early_detection_width:
-			continue
-		if (
-			agent.velocity.length() < VELOCITY_LENGTH_THRESHOLD
-			or agent.rules.stopping_rule
-			or agent.rules.waiting_rule
-		):
-			count += 1
-
-	return count
-
-
 # Find the shortest distance from a point to a path.
 func distance_to_path(
 	point: Vector2,
@@ -449,12 +418,80 @@ func start_rerouting(candidate: Vector2) -> void:
 	alternative_point = candidate
 	rerouting = true
 	rerouting_timer = 0.0
-	previous_distance = parent.global_position.distance_to(candidate)
 	previous_position = parent.global_position
 	parent.queue_redraw()
 
+func should_cancel_passed_portal_reroute() -> bool:
+	if not rerouting:
+		return false
+
+	var navigation_map: RID = parent.get_world_2d().navigation_map
+	var agent_position: Vector2 = parent.global_position
+
+	# Current position -> original goal.
+	var direct_path: PackedVector2Array = NavigationServer2D.map_get_path(
+		navigation_map,
+		agent_position,
+		parent.goal,
+		true
+	)
+
+	if not is_path_usable(direct_path, parent.goal):
+		return false
+
+	# The direct route must not pass through the selected alternative.
+	if distance_to_path(alternative_point, direct_path) <= PORTAL_PATH_TOLERANCE:
+		return false
+
+	# The direct route must not pass through the original congested portal
+	# or any other portal currently being avoided.
+	for portal in failed_portals.keys():
+		if distance_to_path(portal, direct_path) <= PORTAL_PATH_TOLERANCE:
+			return false
+
+	# Current position -> selected alternative portal.
+	var path_to_portal: PackedVector2Array = NavigationServer2D.map_get_path(
+		navigation_map,
+		agent_position,
+		alternative_point,
+		true
+	)
+
+	if not is_path_usable(path_to_portal, alternative_point):
+		return false
+
+	# Selected alternative portal -> original goal.
+	var portal_to_goal_path: PackedVector2Array = NavigationServer2D.map_get_path(
+		navigation_map,
+		alternative_point,
+		parent.goal,
+		true
+	)
+
+	if not is_path_usable(portal_to_goal_path, parent.goal):
+		return false
+
+	var direct_length: float = get_path_length(direct_path)
+
+	var via_portal_length: float = (
+		get_path_length(path_to_portal)
+		+ get_path_length(portal_to_goal_path)
+	)
+
+	return direct_length + PORTAL_BYPASS_MARGIN < via_portal_length
 
 func update_rerouting(delta: float) -> void:
+	if should_cancel_passed_portal_reroute():
+		if debug_rerouting:
+			print(
+				parent.name,
+				" PORTAL BYPASS: cancelling reroute to ",
+				alternative_point
+			)
+
+		reset()
+		return
+
 	var distance_to_portal: float = parent.global_position.distance_to(
 		alternative_point
 	)
@@ -599,6 +636,5 @@ func reset() -> void:
 	congestion_timer = 0.0
 	bottleneck_detected = false
 	retry_timer = retry_cooldown
-	previous_distance = INF
 	previous_position = Vector2.ZERO
 	parent.queue_redraw()
