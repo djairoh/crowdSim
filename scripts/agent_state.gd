@@ -23,14 +23,13 @@ enum states {
 var panic_level: float = 0.0
 
 const PANIC_THRESHOLD: float = 1.0
-const PANIC_PROPAGATION_RATE: float = 0.5
+const PANIC_PROPAGATION_RATE: float = 0.1
+const PUSHING_MULTIPLIER: float = 0.05
 const DENSITY_THRESHOLD: int = 8
-const DENSITY_PANIC_RATE: float = 0.05
+const DENSITY_PANIC_RATE: float = 0.02
 
 func update(delta: float) -> void:
-	pass
-	# TODO: ignore panic propagation for now to test bottleneck avoidance
-	#update_panic(delta)
+	update_panic(delta)
 
 
 # Set the states
@@ -104,7 +103,7 @@ func update_panic(delta: float) -> void:
 	# Pushing panic: Perceived increase of number of people pushing	
 	var pushing_count: int = parent.repulsion.agent_repulsion_forces.size()
 	if pushing_count >= 2:
-		pushing_panic = 0.2 * pushing_count * delta
+		pushing_panic = PUSHING_MULTIPLIER * pushing_count * delta
 		
 	# Density panic: crowded local area increases panic.
 	if nearby_agents >= DENSITY_THRESHOLD:
