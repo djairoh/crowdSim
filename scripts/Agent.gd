@@ -87,27 +87,6 @@ func _physics_process(delta) -> void:
 	if r_i.length_squared() > 0.0001 or rules.stopping_rule or rules.waiting_rule:
 		alpha_i = 0.0
 		
-	if behaviours.bottleneck_avoidance.rerouting:
-		var bottleneck = behaviours.bottleneck_avoidance
-		var nav = forces.f_at_nav
-
-		if nav.target_position.distance_to(bottleneck.alternative_point) > 1.0:
-			print(
-				name,
-				" WARNING: REROUTE TARGET OVERWRITTEN",
-				" | expected: ", bottleneck.alternative_point,
-				" | actual: ", nav.target_position
-			)
-		
-	if behaviours.bottleneck_avoidance.rerouting and alpha_i == 0.0:
-		print(
-			name,
-			" MOVEMENT BLOCKED",
-			" | repulsion: ", r_i,
-			" | stopping: ", rules.stopping_rule,
-			" | waiting: ", rules.waiting_rule
-		)
-		
 	# Fallen agents forces
 	var F_fa: Vector2 = forces.get_falling_agent_force()
 		

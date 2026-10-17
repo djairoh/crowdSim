@@ -19,6 +19,8 @@ const PATH_ENDPOINT_TOLERANCE: float = 12.0
 @export var congestion_timer_threshold: float = 1.0
 @export var congestion_decay_rate: float = 0.25
 
+
+
 var congestion_timer: float = 0.0
 var bottleneck_detected: bool = false
 
@@ -36,18 +38,21 @@ var alternative_point: Vector2 = Vector2.ZERO
 var failed_portals: Dictionary = {}
 
 @export var failed_portal_cooldown: float = 15.0
-
 @export var alternative_reached_distance: float = 12.0
 @export var rerouting_timeout: float = 5.0
+@export var reroute_congestion_radius: float = 48.0
+# Remember the doorway that originally caused rerouting.
+var original_congested_portal: Vector2 = Vector2.ZERO
+
+# Only visible slow agents near the selected portal count.
+@export var portal_local_crowd_radius: float = 48.0
+@export var debug_rerouting: bool = true
+
 var rerouting_timer: float = 0.0
 var previous_distance: float = INF
 const MIN_PROGRESS: float = 0.1
 
 @export var portal_detection_radius: float = 96.0
-
-# Penalize busy alternative portals when comparing routes.
-@export var portal_crowd_radius: float = 48.0
-@export var portal_congestion_penalty: float = 100.0
 
 var previous_position: Vector2 = Vector2.ZERO
 
@@ -94,12 +99,20 @@ func update(delta: float) -> void:
 
 	var candidate: Vector2 = get_best_alternative_point()
 
+	# No valid alternative portal
 	if candidate == Vector2.ZERO:
-		print(parent.name, " found no valid alternative portal")
 		return
 
-	print(parent.name, " BEST alternative: ", candidate)
+	var original_portal: Vector2 = get_congested_portal(
+		parent.crowd_manager.lvl.get_open_portal_positions()
+	)
+
 	start_rerouting(candidate)
+
+	if rerouting and alternative_point == candidate:
+		if original_portal != Vector2.ZERO:
+			mark_portal_failed(original_portal)
+			print(parent.name, " REMEMBER original congested portal ", original_portal)
 	
 func is_near_open_portal() -> bool:
 	var portals: Array[Vector2] = (
@@ -114,9 +127,8 @@ func is_near_open_portal() -> bool:
 
 func mark_portal_failed(portal: Vector2) -> void:
 	failed_portals[portal] = failed_portal_cooldown
-
-	print(parent.name, " temporarily avoiding portal ", portal)
-
+	if debug_rerouting:
+		print(parent.name, " AVOID portal ", portal, " for ", failed_portal_cooldown, "s")
 
 func update_failed_portals(delta: float) -> void:
 	for portal in failed_portals.keys():
@@ -124,6 +136,8 @@ func update_failed_portals(delta: float) -> void:
 
 		if failed_portals[portal] <= 0.0:
 			failed_portals.erase(portal)
+			if debug_rerouting:
+				print(parent.name, " portal cooldown expired: ", portal)
 
 
 func is_route_congested() -> bool:
@@ -199,6 +213,34 @@ func is_route_congested() -> bool:
 		and (already_congested or congestion_ahead)
 	)
 	
+# Count only slow agents the rerouting agent can actually see near its selected portal.
+func get_visible_portal_congestion(portal: Vector2) -> int:
+	var count: int = 0
+	var forward: Vector2 = parent.desired_velocity.normalized()
+	if forward == Vector2.ZERO:
+		return 0
+
+	for agent in parent.forces.visible_agents:
+		if not is_instance_valid(agent) or agent == parent:
+			continue
+		if agent.global_position.distance_to(portal) > portal_local_crowd_radius:
+			continue
+		var to_agent: Vector2 = agent.global_position - parent.global_position
+		var forward_distance: float = forward.dot(to_agent)
+		if forward_distance <= 0.0 or forward_distance > early_detection_distance:
+			continue
+		if absf(forward.cross(to_agent)) > early_detection_width:
+			continue
+		if (
+			agent.velocity.length() < VELOCITY_LENGTH_THRESHOLD
+			or agent.rules.stopping_rule
+			or agent.rules.waiting_rule
+		):
+			count += 1
+
+	return count
+
+
 # Find the shortest distance from a point to a path.
 func distance_to_path(
 	point: Vector2,
@@ -226,8 +268,7 @@ func distance_to_path(
 	return closest_distance
 
 
-# Identify the portal on the agent's intended route,
-# rather than assuming the nearest portal is congested.
+# Identify the congested portal on the agent's intended route
 func get_congested_portal(
 	open_portals: Array[Vector2]
 ) -> Vector2:
@@ -288,63 +329,49 @@ func get_path_length(path: PackedVector2Array) -> float:
 
 	return total_length
 
-
-func get_portal_congestion(portal_pos: Vector2) -> int:
-	var congested_agents: int = 0
-
-	for agent in get_tree().get_nodes_in_group("agent"):
-		if not is_instance_valid(agent) or agent == parent:
-			continue
-		if not agent is CrowdAgent:
-			continue
-		if agent.global_position.distance_to(portal_pos) > portal_crowd_radius:
-			continue
-		if (
-			agent.velocity.length() < VELOCITY_LENGTH_THRESHOLD
-			or agent.rules.stopping_rule
-			or agent.rules.waiting_rule
-		):
-			congested_agents += 1
-
-	return congested_agents
-
-
-func get_best_alternative_point() -> Vector2:
-	var level = parent.crowd_manager.lvl
-
+func get_best_alternative_point(
+	excluded_portal: Vector2 = Vector2.ZERO
+) -> Vector2:
+	# Get portals/doors that are currently open
 	var open_portals: Array[Vector2] = (
-		level.get_open_portal_positions()
+		parent.crowd_manager.lvl.get_open_portal_positions()
 	)
-
+	
+	# If there are less than 2 portals open there is no need
 	if open_portals.size() < 2:
+		if debug_rerouting:
+			print(parent.name, " NO ALTERNATIVE: fewer than 2 open portals")
 		return Vector2.ZERO
 
-	var congested_portal: Vector2 = get_congested_portal(
-		open_portals
-	)
+	var congested_portal: Vector2 = excluded_portal
 
 	if congested_portal == Vector2.ZERO:
-		print(parent.name, " no congested portal found on route")
+		congested_portal = get_congested_portal(open_portals)
+	if congested_portal == Vector2.ZERO:
+		if debug_rerouting:
+			print(parent.name, " NO ALTERNATIVE: congested portal not found on original route")
 		return Vector2.ZERO
-
-	print(parent.name, " congested portal: ", congested_portal)
+	if debug_rerouting:
+		print(parent.name, " SELECT alternative | excluded=", congested_portal, " | failed=", failed_portals.keys())
 
 	var navigation_map: RID = parent.get_world_2d().navigation_map
-
 	var best_score: float = INF
 	var best_point: Vector2 = Vector2.ZERO
 
 	for portal_pos in open_portals:
-		# Don't choose the congested doorway.
+		# Don't choose the congested doorway
 		if portal_pos == congested_portal:
+			if debug_rerouting:
+				print(parent.name, " SKIP ", portal_pos, ": excluded congested portal")
 			continue
 
-		# Don't retry a recently failed alternative.
+		# Don't retry a recently failed alternative
 		if failed_portals.has(portal_pos):
-			print(parent.name, " SKIPPING failed portal: ", portal_pos)
+			if debug_rerouting:
+				print(parent.name, " SKIP ", portal_pos, ": temporary cooldown")
 			continue
 
-		# Current position -> alternative portal.
+		# Current position -> alternative portal
 		var path_to_portal: PackedVector2Array = (
 			NavigationServer2D.map_get_path(
 				navigation_map,
@@ -355,11 +382,11 @@ func get_best_alternative_point() -> Vector2:
 		)
 
 		if not is_path_usable(path_to_portal, portal_pos):
-			print(parent.name, " rejected ", portal_pos, ": unreachable from agent")
-
+			if debug_rerouting:
+				print(parent.name, " REJECT ", portal_pos, ": cannot reach portal")
 			continue
 
-		# Alternative portal -> original goal.
+		# Alternative portal -> original goal
 		var path_to_goal: PackedVector2Array = (
 			NavigationServer2D.map_get_path(
 				navigation_map,
@@ -370,26 +397,25 @@ func get_best_alternative_point() -> Vector2:
 		)
 
 		if not is_path_usable(path_to_goal, parent.goal):
-			print(parent.name, " rejected ", portal_pos, ": cannot reach goal")
-
+			if debug_rerouting:
+				print(parent.name, " REJECT ", portal_pos, ": cannot reach goal")
 			continue
 
-		# Reject alternatives that still require passing
-		# through the congested doorway.
+		# Reject alternatives that still require passing through the congested doorway.
 		if (
 			distance_to_path(congested_portal, path_to_portal)
 			<= PORTAL_PATH_TOLERANCE
 		):
-			print(parent.name, " rejected ", portal_pos, ": route passes congested door")
-
+			if debug_rerouting:
+				print(parent.name, " REJECT ", portal_pos, ": path crosses excluded portal")
 			continue
 
 		if (
 			distance_to_path(congested_portal, path_to_goal)
 			<= PORTAL_PATH_TOLERANCE
 		):
-			print(parent.name, " rejected ", portal_pos, ": continuation passes congested door")
-
+			if debug_rerouting:
+				print(parent.name, " REJECT ", portal_pos, ": continuation crosses excluded portal")
 			continue
 
 		var total_length: float = (
@@ -397,24 +423,14 @@ func get_best_alternative_point() -> Vector2:
 			+ get_path_length(path_to_goal)
 		)
 
-		var congestion: int = get_portal_congestion(portal_pos)
-		var score: float = (
-			total_length
-			+ congestion * portal_congestion_penalty
-		)
-
-		print(
-			parent.name,
-			" portal: ", portal_pos,
-			" | length: ", total_length,
-			" | congestion: ", congestion,
-			" | score: ", score
-		)
-
-		if score < best_score:
-			best_score = score
+		if debug_rerouting:
+			print(parent.name, " CANDIDATE ", portal_pos, " | length=", total_length)
+		if total_length < best_score:
+			best_score = total_length
 			best_point = portal_pos
 
+	if debug_rerouting:
+		print(parent.name, " SELECTED ", best_point, " | length=", best_score)
 	return best_point
 
 
@@ -422,28 +438,88 @@ func start_rerouting(candidate: Vector2) -> void:
 	var success: bool = parent.forces.request_path(candidate)
 
 	if not success:
+		if debug_rerouting:
+			print(parent.name, " PATH REQUEST FAILED: ", candidate)
 		parent.forces.request_path(parent.goal)
 		mark_portal_failed(candidate)
-		print(parent.name, " failed to reroute to ", candidate)
 		return
 
+	if debug_rerouting:
+		print(parent.name, " REROUTE ", alternative_point if rerouting else parent.goal, " -> ", candidate, " | pos=", parent.global_position)
 	alternative_point = candidate
 	rerouting = true
 	rerouting_timer = 0.0
 	previous_distance = parent.global_position.distance_to(candidate)
 	previous_position = parent.global_position
-	print(parent.name, " REROUTING to ", alternative_point)
 	parent.queue_redraw()
 
 
 func update_rerouting(delta: float) -> void:
-	if parent.global_position.distance_to(
+	var distance_to_portal: float = parent.global_position.distance_to(
 		alternative_point
-	) <= alternative_reached_distance:
-		print(parent.name, " reached alternative portal")
+	)
+
+	if distance_to_portal <= alternative_reached_distance:
+		print(parent.name, " REACHED portal ", alternative_point)
 		reset()
 		return
 
+	# Only check congestion near the selected portal.
+	if distance_to_portal <= reroute_congestion_radius:
+		if is_selected_portal_congested():
+			congestion_timer += delta
+		else:
+			congestion_timer = maxf(
+				congestion_timer - delta * congestion_decay_rate,
+				0.0
+			)
+
+		if congestion_timer >= congestion_timer_threshold:
+			var previous_portal: Vector2 = alternative_point
+
+			print(
+				parent.name,
+				" PORTAL CONGESTED ", previous_portal,
+				" | distance=", distance_to_portal
+			)
+
+			# Find a replacement before marking this portal as avoided.
+			var candidate: Vector2 = get_best_alternative_point(
+				previous_portal
+			)
+
+			congestion_timer = 0.0
+
+			if candidate != Vector2.ZERO:
+				var success: bool = parent.forces.request_path(candidate)
+
+				if success:
+					mark_portal_failed(previous_portal)
+
+					print(
+						parent.name,
+						" SWITCH ", previous_portal,
+						" -> ", candidate
+					)
+
+					alternative_point = candidate
+					rerouting_timer = 0.0
+					previous_position = parent.global_position
+					parent.queue_redraw()
+					return
+
+				# Restore the previous route if switching failed.
+				parent.forces.request_path(previous_portal)
+
+			print(
+				parent.name,
+				" NO OTHER PORTAL: continuing toward ",
+				previous_portal
+			)
+	else:
+		congestion_timer = 0.0
+
+	# Preserve existing stall detection.
 	var movement: float = parent.global_position.distance_to(
 		previous_position
 	)
@@ -455,12 +531,66 @@ func update_rerouting(delta: float) -> void:
 		rerouting_timer += delta
 
 	if rerouting_timer >= rerouting_timeout:
-		print(parent.name, " rerouting stalled at ", alternative_point)
+		print(parent.name, " REROUTE STALLED at ", alternative_point)
 		mark_portal_failed(alternative_point)
 		reset()
 		
+func is_selected_portal_congested() -> bool:
+	var slow_agents_ahead: int = 0
+	var forward: Vector2 = parent.desired_velocity.normalized()
+
+	if forward == Vector2.ZERO:
+		return false
+
+	for agent in parent.forces.visible_agents:
+		if not is_instance_valid(agent) or agent == parent:
+			continue
+
+		if not agent is CrowdAgent:
+			continue
+
+		# Only consider agents near the selected doorway.
+		if agent.global_position.distance_to(
+			alternative_point
+		) > portal_local_crowd_radius:
+			continue
+
+		var is_slow: bool = (
+			agent.velocity.length() < VELOCITY_LENGTH_THRESHOLD
+			or agent.rules.stopping_rule
+			or agent.rules.waiting_rule
+		)
+
+		if not is_slow:
+			continue
+
+		var to_agent: Vector2 = (
+			agent.global_position - parent.global_position
+		)
+
+		var forward_distance: float = forward.dot(to_agent)
+
+		if forward_distance <= 0.0:
+			continue
+
+		if forward_distance > early_detection_distance:
+			continue
+
+		var lateral_distance: float = absf(
+			forward.cross(to_agent)
+		)
+
+		if lateral_distance > early_detection_width:
+			continue
+
+		slow_agents_ahead += 1
+
+	return slow_agents_ahead >= VISIBLE_AGENTS_THRESHOLD
+
 
 func reset() -> void:
+	if debug_rerouting and rerouting:
+		print(parent.name, " RESET reroute ", alternative_point, " -> original goal ", parent.goal)
 	if rerouting:
 		parent.forces.request_path(parent.goal)
 	rerouting = false
