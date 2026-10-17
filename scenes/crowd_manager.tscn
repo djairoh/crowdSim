@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bmn3swhh128pg" path="res://scripts/CrowdManager.gd" id="1_pyr1s"]
 [ext_resource type="PackedScene" uid="uid://3qbsm3k1q0a0" path="res://scenes/levels/test_wallrepulsion.tscn" id="2_ikxhy"]
 [ext_resource type="Script" uid="uid://sddjjqha0rpt" path="res://scripts/camera.gd" id="2_y2edp"]
+[ext_resource type="Script" uid="uid://p1dskj32i3wc" path="res://scripts/fps_counter.gd" id="4_8dgo1"]
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
@@ -20,6 +21,13 @@ autostart = true
 wait_time = 6.524
 one_shot = true
 autostart = true
+
+[node name="FPSCounter" type="Label" parent="." unique_id=1514210029]
+offset_left = -256.0
+offset_top = -24.0
+offset_right = -128.0
+offset_bottom = -1.0
+script = ExtResource("4_8dgo1")
 
 [connection signal="timeout" from="agent_spawn_timer" to="." method="_on_agent_spawn_timer_timeout"]
 [connection signal="timeout" from="door_toggle_timer" to="." method="_on_door_toggle_timer_timeout"]
