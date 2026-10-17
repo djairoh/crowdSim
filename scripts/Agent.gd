@@ -138,7 +138,7 @@ func _draw():
 	if ! draw_debug:
 		return
 	
-	if behaviours.bottleneck_avoidance.bottleneck_detected:
+	if behaviours.bottleneck_avoidance.detection.bottleneck_detected:
 		var bottleneck = behaviours.bottleneck_avoidance
 
 		# Pink ring: agent is notice a bottleneck.
@@ -150,7 +150,7 @@ func _draw():
 			2.0
 		)
 		
-	if behaviours.bottleneck_avoidance.rerouting:
+	if behaviours.bottleneck_avoidance.rerouting.is_rerouting:
 		var bottleneck = behaviours.bottleneck_avoidance
 
 		# Orange ring: agent is rerouting.
@@ -163,7 +163,7 @@ func _draw():
 		)
 
 		# Convert the world-space target to agent-local coordinates.
-		var local_target: Vector2 = to_local(bottleneck.alternative_point)
+		var local_target: Vector2 = to_local(bottleneck.rerouting.alternative_point)
 
 		# Yellow line toward detour target.
 		draw_line(
@@ -226,7 +226,7 @@ func set_selected(val: bool) -> void:
 
 func _on_move_idle_timer_timeout() -> void:
 	# Move towards rerouted point when avoiding bottleneck
-	if behaviours.bottleneck_avoidance.rerouting:
+	if behaviours.bottleneck_avoidance.rerouting.is_rerouting:
 		start_position = global_position
 		return
 
@@ -238,7 +238,7 @@ func _on_move_idle_timer_timeout() -> void:
 
 func _on_attraction_navigation_target_reached() -> void:
 	# Do not free queue for temporary rerouting
-	if behaviours.bottleneck_avoidance.rerouting:
+	if behaviours.bottleneck_avoidance.rerouting.is_rerouting:
 		return
 	# TODO: what do when goal is reached?
 	despawned.emit(self)

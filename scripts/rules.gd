@@ -66,7 +66,7 @@ func should_wait() -> bool:
 	if parent.agent_state.is_panic():
 		return false
 		
-	if parent.agent_state.is_impatient() and parent.behaviours.bottleneck_avoidance.rerouting:
+	if parent.agent_state.is_impatient() and parent.behaviours.bottleneck_avoidance.rerouting.is_rerouting:
 		return false
 		
 	var v_i: Vector2 = parent.desired_velocity
