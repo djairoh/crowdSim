@@ -18,6 +18,9 @@ var waiting_timer: float = 0.0
 @export var waiting_time_min: float = 0.1
 @export var waiting_time_max: float = 0.3
 
+@export var waiting_alignment_threshold: float = 0.7
+@export var waiting_lateral_distance: float = 12.0
+
 var visible_agents: Dictionary = {}
 
 # TODO: Notes: waiting rule area depends on personality
@@ -60,49 +63,57 @@ func update_waiting_rule(delta: float) -> void:
 		waiting_timer = randf_range(waiting_time_min, waiting_time_max)
 
 func should_wait() -> bool:
-	
-	# TODO: Implement panic behavior
 	if parent.agent_state.is_panic():
 		return false
 		
-	var v_i: Vector2 = parent.desired_velocity
-	
-	if v_i.length_squared() <= 0.0001:
+	if parent.agent_state.is_impatient() and parent.behaviours.bottleneck_avoidance.rerouting:
 		return false
 		
-	var forward = v_i.normalized()
+	var v_i: Vector2 = parent.desired_velocity
 
-	# if another agent enters waiting area
+	if v_i.length_squared() <= 0.0001:
+		return false
+
+	var forward: Vector2 = v_i.normalized()
+
 	for other_agent in visible_agents:
-		
 		if not is_instance_valid(other_agent):
 			continue
-			
-		# Fallen agents aren't people we're queuing behind
+
 		if other_agent.agent_state.is_fallen():
 			continue
-			
-		# Apply waiting rule for agent with same direction
+
 		var v_j: Vector2 = other_agent.desired_velocity
-		
+
 		if v_j.length_squared() <= 0.0001:
 			continue
-			
-		# Direction from agent i to agent j.
+
 		var to_j: Vector2 = (
 			other_agent.global_position
 			- parent.global_position
 		)
-			
-		# j must actually be ahead of i.
-		if forward.dot(to_j) <= 0.0:
+
+		# Other agent must be ahead.
+		var forward_distance: float = forward.dot(to_j)
+
+		if forward_distance <= 0.0:
 			continue
-			
-		if v_i.dot(v_j) > 0.0:
+
+		# Other agent must be close to our intended movement line.
+		var lateral_distance: float = absf(
+			forward.cross(to_j)
+		)
+
+		if lateral_distance > waiting_lateral_distance:
+			continue
+
+		# Agents must be moving in sufficiently similar directions.
+		var alignment: float = forward.dot(v_j.normalized())
+
+		if alignment >= waiting_alignment_threshold:
 			return true
-			
+
 	return false
-	
 
 func _on_waiting_area_body_entered(body: Node2D) -> void:
 	if body == parent:

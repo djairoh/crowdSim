@@ -44,8 +44,7 @@ var min_agent_repulsion_count: int = 3
 			
 @export var normal_personal_space: float = 4.0
 @export var panic_personal_space: float = 0.0
-# TODO: check paper
-@export var impatient_personal_space: float = 4.0
+@export var impatient_personal_space: float = 2.0
 
 func _update_personal_space() -> void:
 	if parent.agent_state.is_panic():

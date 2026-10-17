@@ -61,6 +61,13 @@ func _physics_process(delta) -> void:
 	if agent_state.is_panic():
 		target_max_speed *= panic_speed_multiplier
 		
+		
+	# Update agent state
+	agent_state.update(delta)
+		
+	# Update agent behaviours
+	behaviours.update(delta)
+		
 	self.desired_velocity = forces.get_desired_direction() * target_max_speed
 	
 	# Eq. (1) + Eq. (2)
@@ -76,15 +83,30 @@ func _physics_process(delta) -> void:
 	
 	# Update stopping rule to prevent shaking agents
 	rules.update_rules(delta)
-	
-	# Update agent state
-	agent_state.update(delta)
-	
-	# Update agent behaviours
-	behaviours.update(delta)
-	
+
 	if r_i.length_squared() > 0.0001 or rules.stopping_rule or rules.waiting_rule:
 		alpha_i = 0.0
+		
+	if behaviours.bottleneck_avoidance.rerouting:
+		var bottleneck = behaviours.bottleneck_avoidance
+		var nav = forces.f_at_nav
+
+		if nav.target_position.distance_to(bottleneck.alternative_point) > 1.0:
+			print(
+				name,
+				" WARNING: REROUTE TARGET OVERWRITTEN",
+				" | expected: ", bottleneck.alternative_point,
+				" | actual: ", nav.target_position
+			)
+		
+	if behaviours.bottleneck_avoidance.rerouting and alpha_i == 0.0:
+		print(
+			name,
+			" MOVEMENT BLOCKED",
+			" | repulsion: ", r_i,
+			" | stopping: ", rules.stopping_rule,
+			" | waiting: ", rules.waiting_rule
+		)
 		
 	# Fallen agents forces
 	var F_fa: Vector2 = forces.get_falling_agent_force()
@@ -122,9 +144,6 @@ func _physics_process(delta) -> void:
 		+ r_i
 	)
 
-	# DEPRECATED: position calculation is not implemented as it is in the paper.
-	#velocity = f_to * max_speed
-	
 	# Position calculation adapted from the paper.
 	velocity = displacement / delta
 	
@@ -139,6 +158,49 @@ func _physics_process(delta) -> void:
 func _draw():
 	if ! draw_debug:
 		return
+	
+	if behaviours.bottleneck_avoidance.bottleneck_detected:
+		var bottleneck = behaviours.bottleneck_avoidance
+
+		# Pink ring: agent is notice a bottleneck.
+		draw_circle(
+			Vector2.ZERO,
+			12.0,
+			Color.HOT_PINK,
+			false,
+			2.0
+		)
+		
+	if behaviours.bottleneck_avoidance.rerouting:
+		var bottleneck = behaviours.bottleneck_avoidance
+
+		# Orange ring: agent is rerouting.
+		draw_circle(
+			Vector2.ZERO,
+			12.0,
+			Color.ORANGE,
+			false,
+			2.0
+		)
+
+		# Convert the world-space target to agent-local coordinates.
+		var local_target: Vector2 = to_local(bottleneck.alternative_point)
+
+		# Yellow line toward detour target.
+		draw_line(
+			Vector2.ZERO,
+			local_target,
+			Color.YELLOW,
+			2.0
+		)
+
+		# Mark the detour destination.
+		draw_circle(
+			local_target,
+			5.0,
+			Color.YELLOW,
+			true
+		)
 		
 	if agent_state.is_fallen():
 		var fallen_color: Color
@@ -184,9 +246,14 @@ func set_selected(val: bool) -> void:
 
 
 func _on_move_idle_timer_timeout() -> void:
-	var distance_moved = start_position.distance_to(global_position)
+	# Move towards rerouted point when avoiding bottleneck
+	if behaviours.bottleneck_avoidance.rerouting:
+		start_position = global_position
+		return
+
+	var distance_moved: float = start_position.distance_to(global_position)
 	if distance_moved < max_movement:
-		request_path(goal);
+		request_path(goal)
 	start_position = global_position
 
 
