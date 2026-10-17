@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://c8l6sw6g6us8w" path="res://scripts/bottleneck_avoidance.gd" id="9_tdbcq"]
 [ext_resource type="Script" uid="uid://ckd5ijhpy4uwo" path="res://scripts/congestion_detection.gd" id="10_tdbcq"]
 [ext_resource type="Script" uid="uid://cekar6adkac52" path="res://scenes/portal_rerouting.gd" id="11_ui88r"]
+[ext_resource type="Script" uid="uid://bj6oc8ccvypcy" path="res://scenes/portal_selection.gd" id="12_xqccd"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_utciu"]
 resource_local_to_scene = true
@@ -222,6 +223,9 @@ script = ExtResource("10_tdbcq")
 
 [node name="PortalRerouting" type="Node" parent="Behaviours/BottleneckAvoidance" unique_id=948931617]
 script = ExtResource("11_ui88r")
+
+[node name="PortalSelection" type="Node" parent="Behaviours/BottleneckAvoidance" unique_id=1553104716]
+script = ExtResource("12_xqccd")
 
 [connection signal="input_event" from="." to="." method="_on_input_event"]
 [connection signal="stateChange" from="AgentState" to="." method="_on_agent_state_state_change"]
