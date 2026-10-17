@@ -23,7 +23,6 @@ var waiting_timer: float = 0.0
 
 var visible_agents: Dictionary = {}
 
-# TODO: Notes: waiting rule area depends on personality
 # Normal agent: largest
 # Panic agent: small, no respect
 

@@ -2,7 +2,7 @@ extends Node2D
 
 # This class handles the different types of agent states and remove coupling from 
 # agent class trying to handle states
-# TODO: Update sprite colors
+
 class_name AgentState
 
 @onready var parent: CrowdAgent = get_parent()
