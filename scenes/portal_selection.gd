@@ -8,9 +8,6 @@ class_name PortalSelection
 
 const PORTAL_BYPASS_MARGIN: float = 12.0
 
-# Print portal selection and path evaluation decisions.
-@export var debug_selection: bool = true
-
 # Identify the congested portal on the agent's intended route
 func get_congested_portal(
 	open_portals: Array[Vector2]
@@ -58,8 +55,6 @@ func get_best_alternative_point(
 	
 	# If there are less than 2 portals open there is no need
 	if open_portals.size() < 2:
-		if debug_selection:
-			print(parent.name, " NO ALTERNATIVE: fewer than 2 open portals")
 		return Vector2.ZERO
 
 	var congested_portal: Vector2 = excluded_portal
@@ -67,12 +62,7 @@ func get_best_alternative_point(
 	if congested_portal == Vector2.ZERO:
 		congested_portal = get_congested_portal(open_portals)
 	if congested_portal == Vector2.ZERO:
-		if debug_selection:
-			print(parent.name, " NO ALTERNATIVE: congested portal not found on original route")
 		return Vector2.ZERO
-	if debug_selection:
-		print(parent.name, " SELECT alternative | excluded=", congested_portal, " | failed=", rerouting.failed_portals.keys())
-
 	var navigation_map: RID = parent.get_world_2d().navigation_map
 	var best_score: float = INF
 	var best_point: Vector2 = Vector2.ZERO
@@ -80,14 +70,10 @@ func get_best_alternative_point(
 	for portal_pos in open_portals:
 		# Don't choose the congested doorway
 		if portal_pos == congested_portal:
-			if debug_selection:
-				print(parent.name, " SKIP ", portal_pos, ": excluded congested portal")
 			continue
 
 		# Don't retry a recently failed alternative
 		if rerouting.failed_portals.has(portal_pos):
-			if debug_selection:
-				print(parent.name, " SKIP ", portal_pos, ": temporary cooldown")
 			continue
 
 		# Current position -> alternative portal
@@ -99,10 +85,9 @@ func get_best_alternative_point(
 				true
 			)
 		)
-
+		
+		# Cannot reach portal
 		if not paths.is_path_usable(path_to_portal, portal_pos):
-			if debug_selection:
-				print(parent.name, " REJECT ", portal_pos, ": cannot reach portal")
 			continue
 
 		# Alternative portal -> original goal
@@ -114,10 +99,9 @@ func get_best_alternative_point(
 				true
 			)
 		)
-
+		
+		# Cannot reach goal
 		if not paths.is_path_usable(path_to_goal, parent.goal):
-			if debug_selection:
-				print(parent.name, " REJECT ", portal_pos, ": cannot reach goal")
 			continue
 
 		# Reject alternatives that still require passing through the congested doorway.
@@ -125,16 +109,13 @@ func get_best_alternative_point(
 			paths.distance_to_path(congested_portal, path_to_portal)
 			<= paths.PORTAL_PATH_TOLERANCE
 		):
-			if debug_selection:
-				print(parent.name, " REJECT ", portal_pos, ": path crosses excluded portal")
 			continue
-
+		
+		# Reject congested alternative to goal
 		if (
 			paths.distance_to_path(congested_portal, path_to_goal)
 			<= paths.PORTAL_PATH_TOLERANCE
 		):
-			if debug_selection:
-				print(parent.name, " REJECT ", portal_pos, ": continuation crosses excluded portal")
 			continue
 
 		var total_length: float = (
@@ -142,14 +123,10 @@ func get_best_alternative_point(
 			+ paths.get_path_length(path_to_goal)
 		)
 
-		if debug_selection:
-			print(parent.name, " CANDIDATE ", portal_pos, " | length=", total_length)
 		if total_length < best_score:
 			best_score = total_length
 			best_point = portal_pos
 
-	if debug_selection:
-		print(parent.name, " SELECTED ", best_point, " | length=", best_score)
 	return best_point
 
 func should_cancel_passed_portal_reroute() -> bool:

@@ -16,17 +16,13 @@ var is_rerouting: bool = false
 var alternative_point: Vector2 = Vector2.ZERO
 
 # Remember alternative portals that failed recently.
-# Key: portal position
-# Value: remaining cooldown in seconds
+# Key: portal position, Value: remaining cooldown in seconds
 var failed_portals: Dictionary = {}
 
 @export var failed_portal_cooldown: float = 15.0
 @export var alternative_reached_distance: float = 12.0
 @export var rerouting_timeout: float = 5.0
 @export var reroute_congestion_radius: float = 48.0
-
-# Only visible slow agents near the selected portal count.
-@export var debug_rerouting: bool = true
 
 var rerouting_timer: float = 0.0
 var previous_position: Vector2 = Vector2.ZERO
@@ -48,39 +44,26 @@ func try_start_rerouting() -> void:
 	if is_rerouting and alternative_point == candidate:
 		if original_portal != Vector2.ZERO:
 			mark_portal_failed(original_portal)
-			if debug_rerouting:
-				print(
-					parent.name,
-					" REMEMBER original congested portal ",
-					original_portal
-				)
 
 func mark_portal_failed(portal: Vector2) -> void:
 	failed_portals[portal] = failed_portal_cooldown
-	if debug_rerouting:
-		print(parent.name, " AVOID portal ", portal, " for ", failed_portal_cooldown, "s")
 
 func update_failed_portals(delta: float) -> void:
 	for portal in failed_portals.keys():
 		failed_portals[portal] -= delta
-
+		
+		# Portal cooldown expired
 		if failed_portals[portal] <= 0.0:
 			failed_portals.erase(portal)
-			if debug_rerouting:
-				print(parent.name, " portal cooldown expired: ", portal)
 
 func start_rerouting(candidate: Vector2) -> void:
 	var success: bool = parent.forces.request_path(candidate)
 
 	if not success:
-		if debug_rerouting:
-			print(parent.name, " PATH REQUEST FAILED: ", candidate)
 		parent.forces.request_path(parent.goal)
 		mark_portal_failed(candidate)
 		return
 
-	if debug_rerouting:
-		print(parent.name, " REROUTE ", alternative_point if is_rerouting else parent.goal, " -> ", candidate, " | pos=", parent.global_position)
 	alternative_point = candidate
 	is_rerouting = true
 	rerouting_timer = 0.0
@@ -89,22 +72,15 @@ func start_rerouting(candidate: Vector2) -> void:
 
 func update_rerouting(delta: float) -> void:
 	if selection.should_cancel_passed_portal_reroute():
-		if debug_rerouting:
-			print(
-				parent.name,
-				" PORTAL BYPASS: cancelling reroute to ",
-				alternative_point
-			)
-
 		reset()
 		return
 
 	var distance_to_portal: float = parent.global_position.distance_to(
 		alternative_point
 	)
-
+	
+	# Reached portal
 	if distance_to_portal <= alternative_reached_distance:
-		print(parent.name, " REACHED portal ", alternative_point)
 		reset()
 		return
 
@@ -121,12 +97,6 @@ func update_rerouting(delta: float) -> void:
 		if congestion_timer >= congestion_timer_threshold:
 			var previous_portal: Vector2 = alternative_point
 
-			print(
-				parent.name,
-				" PORTAL CONGESTED ", previous_portal,
-				" | distance=", distance_to_portal
-			)
-
 			# Find a replacement before marking this portal as avoided.
 			var candidate: Vector2 = selection.get_best_alternative_point(
 				previous_portal
@@ -139,13 +109,6 @@ func update_rerouting(delta: float) -> void:
 
 				if success:
 					mark_portal_failed(previous_portal)
-
-					print(
-						parent.name,
-						" SWITCH ", previous_portal,
-						" -> ", candidate
-					)
-
 					alternative_point = candidate
 					rerouting_timer = 0.0
 					previous_position = parent.global_position
@@ -155,11 +118,6 @@ func update_rerouting(delta: float) -> void:
 				# Restore the previous route if switching failed.
 				parent.forces.request_path(previous_portal)
 
-			print(
-				parent.name,
-				" NO OTHER PORTAL: continuing toward ",
-				previous_portal
-			)
 	else:
 		congestion_timer = 0.0
 
@@ -175,29 +133,17 @@ func update_rerouting(delta: float) -> void:
 		rerouting_timer += delta
 
 	if rerouting_timer >= rerouting_timeout:
-		print(parent.name, " REROUTE STALLED at ", alternative_point)
 		mark_portal_failed(alternative_point)
 		reset()
 		
 
 func reset() -> void:
-	if debug_rerouting and is_rerouting:
-		print(
-			parent.name,
-			" RESET reroute ",
-			alternative_point,
-			" -> original goal ",
-			parent.goal
-		)
-
 	if is_rerouting:
 		parent.forces.request_path(parent.goal)
-
 	is_rerouting = false
 	alternative_point = Vector2.ZERO
 	rerouting_timer = 0.0
 	congestion_timer = 0.0
 	previous_position = Vector2.ZERO
-	
 	detection.reset()
 	parent.queue_redraw()

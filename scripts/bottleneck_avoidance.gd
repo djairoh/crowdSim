@@ -6,8 +6,6 @@ class_name BottleneckAvoidance
 @onready var detection: CongestionDetection = $CongestionDetection
 @onready var rerouting: PortalRerouting = $PortalRerouting
 
-# TODO: Delete debugging prints
-
 func update(delta: float) -> void:
 	if not parent.agent_state.is_impatient():
 		if rerouting.is_rerouting or detection.bottleneck_detected:
