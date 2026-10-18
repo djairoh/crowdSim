@@ -8,8 +8,7 @@ class_name BottleneckAvoidance
 
 func update(delta: float) -> void:
 	if not parent.agent_state.is_impatient():
-		if rerouting.is_rerouting or detection.bottleneck_detected:
-			reset()
+		reset()
 		return
 
 	rerouting.update_failed_portals(delta)

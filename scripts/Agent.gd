@@ -195,21 +195,21 @@ func _draw():
 			true
 		)
 		
-	forces._draw()
-	repulsion._draw()
-	
-	if rules.stopping_rule:
-		draw_circle(Vector2.ZERO, 8.0, Color.RED, false, 2.0)
-		draw_line(Vector2.ZERO, repulsion.F_r_ot * 20.0, Color.RED, 2.0)
-		
-	if rules.waiting_rule:
-		draw_circle(Vector2.ZERO, 8.0, Color.GREEN, false, 2.0)
-		draw_line(Vector2.ZERO, repulsion.F_r_ot * 20.0, Color.GREEN, 2.0)
-	
-	var r_i = repulsion.get_total_repulsion(false)
-	if r_i.length_squared() > 0.0001:
-		draw_circle(Vector2(0,0), 8.0, Color.BLUE_VIOLET, false, 2.0)
-		draw_line(Vector2(0,0), repulsion.F_r_ot * 20.0, Color.BLUE_VIOLET, 2.0)
+	#forces._draw()
+	#repulsion._draw()
+	#
+	#if rules.stopping_rule:
+		#draw_circle(Vector2.ZERO, 8.0, Color.RED, false, 2.0)
+		#draw_line(Vector2.ZERO, repulsion.F_r_ot * 20.0, Color.RED, 2.0)
+		#
+	#if rules.waiting_rule:
+		#draw_circle(Vector2.ZERO, 8.0, Color.GREEN, false, 2.0)
+		#draw_line(Vector2.ZERO, repulsion.F_r_ot * 20.0, Color.GREEN, 2.0)
+	#
+	#var r_i = repulsion.get_total_repulsion(false)
+	#if r_i.length_squared() > 0.0001:
+		#draw_circle(Vector2(0,0), 8.0, Color.BLUE_VIOLET, false, 2.0)
+		#draw_line(Vector2(0,0), repulsion.F_r_ot * 20.0, Color.BLUE_VIOLET, 2.0)
 
 func _on_input_event(_viewport: Node, event: InputEvent, _shape_idx: int) -> void:
 		if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
