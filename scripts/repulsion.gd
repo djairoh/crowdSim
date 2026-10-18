@@ -82,7 +82,7 @@ func _update_wall_ray_length() -> void:
 func _update_repulsion():
 	_update_personal_space()
 	# update all forces. makes sure we're on the same page (will be useful if we later decide we don't want to update all forces every frame)
-	calculate_wall_repulsion()
+	#calculate_wall_repulsion()
 	calculate_object_repulsion()
 	calculate_other_agent_repulsion()
 	
@@ -100,20 +100,8 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 	if F_r_wa.length_squared() > 0 or F_r_ob.length_squared() > 0:
 		lambda = 0.3
 	
-	if (
-		F_r_wa.length_squared() > 0.000001
-		and F_r_ot.length_squared() > 0.000001
-	):
-		# DEBUG: Check to see if wall repulsion is larger or smaller than agent repulsions
-		print(
-			parent.name,
-			" | Wall: ", F_r_wa,
-			" | Agent: ", lambda * F_r_ot,
-			" | Total: ", F_r_wa + F_r_ob + lambda * F_r_ot
-		)
-	
 	# Eq. (10)
-	return F_r_ob + (lambda * F_r_ot) # this is fine
+	return F_r_ob + (lambda * F_r_ot) # without wall repulsion
 	#return F_r_wa + F_r_ob + (lambda * F_r_ot)
 	
 
