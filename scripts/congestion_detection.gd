@@ -50,7 +50,7 @@ func update(delta: float) -> void:
 
 func is_near_open_portal() -> bool:
 	var portals: Array[Vector2] = (
-		parent.crowd_manager.lvl.get_open_portal_positions()
+		parent.crowd_manager.current_level.get_open_portal_positions()
 	)
 
 	for portal in portals:

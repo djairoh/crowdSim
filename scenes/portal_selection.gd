@@ -50,7 +50,7 @@ func get_best_alternative_point(
 ) -> Vector2:
 	# Get portals/doors that are currently open
 	var open_portals: Array[Vector2] = (
-		parent.crowd_manager.lvl.get_open_portal_positions()
+		parent.crowd_manager.current_level.get_open_portal_positions()
 	)
 	
 	# If there are less than 2 portals open there is no need

@@ -39,7 +39,9 @@ func toggle_all_doors():
 				DOOR_CLOSED_TILE_ID if is_open else DOOR_OPENED_TILE_ID, 
 				tiles.get_cell_atlas_coords(cell)
 			)
-
+func bake_nav_reg():
+	$NavigationRegion2D.bake_navigation_polygon()
+	
 func _get_door_poss():
 	for cell in tiles.get_used_cells():
 		var tile_data = tiles.get_cell_tile_data(cell)

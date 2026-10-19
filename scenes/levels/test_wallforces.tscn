@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://vtiwc8dlerq1" path="res://scripts/levels/TestLevel.gd" id="1_g6m2l"]
 [ext_resource type="Texture2D" uid="uid://d24tyoo5dcsjt" path="res://assets/goals.png" id="2_1lrnu"]
 [ext_resource type="Texture2D" uid="uid://wut6dg6a5168" path="res://assets/navigables.png" id="3_iggdf"]
-[ext_resource type="Texture2D" uid="uid://bhifbfj4e80ma" path="res://assets/walls.png" id="4_nbqed"]
+[ext_resource type="Texture2D" uid="uid://c0kxtth63pnwj" path="res://assets/walls.png" id="4_nbqed"]
 [ext_resource type="Texture2D" uid="uid://p1sctca5pwhx" path="res://assets/spawns.png" id="5_5rdt7"]
 
 [sub_resource type="NavigationPolygon" id="NavigationPolygon_h4hsr"]
@@ -1901,7 +1901,7 @@ source_geometry_group_name = &"geometry"
 cell_size = 16.0
 agent_radius = 5.0
 
-[node name="test_hallway" type="Node2D" unique_id=820105770]
+[node name="test_wallforces" type="Node2D" unique_id=820105770]
 script = ExtResource("1_g6m2l")
 
 [node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1892767362 groups=["geometry"]]

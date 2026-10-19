@@ -4,8 +4,9 @@ class_name CrowdManager
 # basically the driver code
 # manages individual agents, the level, allat
 
-@onready var lvl = $level
-@onready var nav_reg = $level/NavigationRegion2D
+@onready var levelSelect: Node = $LevelSelect
+@onready var cam: Camera2D = $Camera2D
+var current_level: Node
 
 # Panic agent ratio
 @export_range(0.0, 1.0)
@@ -19,10 +20,35 @@ var num_agents: int = 0
 var agents: Array
 
 func _ready():
-	# DEBUG: for debugging only
-	print("Portals: ", lvl.portals)
-	# pass
+	show_level_selection()
+	
+func show_level_selection():
+	levelSelect.visible = true
+	levelSelect.setCamera(cam)
+	levelSelect.create_level_buttons(self)
+	
+func start_simulation():
+	$agent_spawn_timer.start()
+	$door_toggle_timer.start()
+	cam.reset()
+	cam.set_input_enabled(true)
+	
+func load_level(name: String):
+	if current_level:
+		current_level.queue_free()
+		
+	var selected = $Levels.find_child(name, false)
+	if selected:
+		current_level = selected.create_instance()
+		current_level.z_index = -1 # render behind agents
+		levelSelect.visible = false
+		start_simulation()
 
+func unload_level():
+	if current_level:
+		current_level.queue_free()
+		current_level = null
+	show_level_selection()
 
 func _spawn_agent():
 	var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
@@ -34,7 +60,7 @@ func _spawn_agent():
 
 func _initialize_agent(agent: CrowdAgent):
 	agent.set_crowd_manager(self)
-	agent.global_position = lvl.get_random_spawn()
+	agent.global_position = current_level.get_random_spawn()
 	
 	# Set panic agents
 	if randf() < impatient_ratio:
@@ -44,11 +70,11 @@ func _initialize_agent(agent: CrowdAgent):
 	else:
 		agent.agent_state.set_normal()
 		
-	agent.request_path(lvl.get_random_goal())
+	agent.request_path(current_level.get_random_goal())
 	# FIXME: agent unreachable target logic
-	#while agent.request_path(lvl.get_random_goal()) == false:
+	#while agent.request_path(current_level.get_random_goal()) == false:
 		#print("target unreachable. selecting new one")
-		#agent.global_position = lvl.get_random_spawn()
+		#agent.global_position = current_level.get_random_spawn()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -67,7 +93,8 @@ func _on_agent_spawn_timer_timeout() -> void:
 
 
 func _on_door_toggle_timer_timeout() -> void:
-	lvl.toggle_all_doors()
-	nav_reg.bake_navigation_polygon()
-	for a in agents:
-		a.request_path(a.goal)
+	if current_level:
+		current_level.toggle_all_doors()
+		current_level.bake_nav_reg()
+		for a in agents:
+			a.request_path(a.goal)
