@@ -8,6 +8,7 @@ class_name AbstractLevel
 const DOOR_OPENED_TILE_ID = 5
 const DOOR_CLOSED_TILE_ID = 4
 
+var spawn_goal_pairs: Array
 var goals: Array
 var spawns: Array
 var door_cells: Array
@@ -15,19 +16,23 @@ var portals: Array[Array] = []
 @onready var tiles = $TileMapLayer
 
 func _ready() -> void:
-	# $NavigationRegion2D.bake_navigation_polygon()
 	goals.append_array(_get_tiles_with_property("is_goal"))
 	spawns.append_array(_get_tiles_with_property("is_spawn"))
 	_get_door_poss()
 	_build_portals()
 		
 func get_random_goal() -> Vector2:
-	# TODO: what if no goals?
 	return goals.pick_random()
 	
 func get_random_spawn() -> Vector2:
 	return spawns.pick_random()
-	# TODO: what if no spawns?
+
+func get_spawn_goal_pair() -> Array:
+	if spawn_goal_pairs.size() > 0:
+		return spawn_goal_pairs.pick_random()
+	return [get_random_spawn(), get_random_goal()]
+
+
 
 func toggle_all_doors():
 	for cell in door_cells:
@@ -125,4 +130,10 @@ func _get_tiles_with_property(property: String) -> Array:
 		if tile_data and tile_data.get_custom_data(property):
 			out_tiles.append(tiles.map_to_local(cell_pos))
 			
+	out_tiles.sort_custom(_sort_vec)
 	return out_tiles
+	
+func _sort_vec(a, b):
+	if a[0] == b[0]:
+		return a[1] < b[1]
+	return a[0] < b[0]
