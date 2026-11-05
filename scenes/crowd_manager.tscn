@@ -35,7 +35,9 @@ columns = 2
 
 [node name="Levels" type="Node" parent="." unique_id=1720318990]
 
-[node name="Vortices" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/vortices.tscn"]
+[node name="Blocking" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/blocking.tscn"]
+
+[node name="Vortices" parent="Levels" unique_id=965550498 instance_placeholder="res://scenes/levels/vortices.tscn"]
 
 [node name="CrossingFlow" parent="Levels" unique_id=815607310 instance_placeholder="res://scenes/levels/crossing_flow.tscn"]
 
