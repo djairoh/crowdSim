@@ -36,7 +36,7 @@ func try_start_rerouting() -> void:
 		return
 
 	var original_portal: Vector2 = selection.get_congested_portal(
-		parent.crowd_manager.lvl.get_open_portal_positions()
+		parent.crowd_manager.current_level.get_open_portal_positions()
 	)
 
 	start_rerouting(candidate)
