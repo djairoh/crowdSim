@@ -19,6 +19,7 @@ var impatient_ratio: float = 0.5
 var num_agents: int = 0
 var agents: Array
 @export var debug_enabled: bool = false
+var is_paused: bool = false
 
 func _ready():
 	show_level_selection()
@@ -80,6 +81,12 @@ func _input(event):
 		debug_enabled = !debug_enabled
 		for a in agents:
 			a.set_debug(debug_enabled)
+	if event.is_action_pressed("togglePause"):
+		is_paused = !is_paused
+		for a in agents:
+			a.set_pause(is_paused)
+		$agent_spawn_timer.paused = is_paused
+		$door_toggle_timer.paused = is_paused
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:

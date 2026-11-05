@@ -20,6 +20,7 @@ signal despawned(agent: CrowdAgent);
 @export var max_movement: float = 10
 @export var start_fallen: bool = false
 @export var draw_debug: bool = false
+var is_paused: bool = false
 
 # refing to parent nodes like this is bad practice, but who caresssss 
 var crowd_manager: CrowdManager
@@ -28,6 +29,10 @@ var goal: Vector2
 var desired_rotation: float = self.rotation
 var desired_velocity: Vector2 = Vector2.ZERO
 var current_speed: float = 0.0
+
+func set_pause(b: bool):
+	is_paused = b
+	$MoveIdleTimer.paused = is_paused
 
 func _ready() -> void:
 	start_position = global_position
@@ -50,6 +55,8 @@ func _process(delta: float) -> void:
 		self.rotation = lerp_angle(self.rotation, self.desired_rotation, clampf(4*delta, 0, 1))
 
 func _physics_process(delta) -> void:
+	if is_paused:
+		return
 	# Stop moving if agent falls.
 	if agent_state.is_fallen():
 		velocity = Vector2.ZERO

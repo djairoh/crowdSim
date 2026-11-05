@@ -85,7 +85,9 @@ neighbor_distance = 50.0
 time_horizon_agents = 0.65
 time_horizon_obstacles = 0.1
 max_speed = 5.0
+debug_enabled = true
 debug_use_custom = true
+debug_path_custom_color = Color(1, 1, 1, 0.38431373)
 
 [node name="RecOfInfluence" type="Area2D" parent="Forces" unique_id=410069496]
 collision_layer = 0

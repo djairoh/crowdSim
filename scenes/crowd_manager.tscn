@@ -7,7 +7,7 @@
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
-panic_ratio = 0.05
+panic_ratio = 1.0
 impatient_ratio = 0.3
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1797879408]
@@ -35,15 +35,11 @@ columns = 2
 
 [node name="Levels" type="Node" parent="." unique_id=1720318990]
 
-[node name="hallway" parent="Levels" unique_id=820105770 instance_placeholder="res://scenes/levels/hallway.tscn"]
+[node name="Vortices" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/vortices.tscn"]
 
-[node name="test_hallway" parent="Levels" unique_id=213032504 instance_placeholder="res://scenes/levels/test_wallforces.tscn"]
+[node name="CrossingFlow" parent="Levels" unique_id=815607310 instance_placeholder="res://scenes/levels/crossing_flow.tscn"]
 
-[node name="test_wallforces" parent="Levels" unique_id=401714219 instance_placeholder="res://scenes/levels/test_wallforces.tscn"]
-
-[node name="test_level" parent="Levels" unique_id=599363193 instance_placeholder="res://scenes/levels/test_level.tscn"]
-
-[node name="test_wallrepulsion" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/test_wallrepulsion.tscn"]
+[node name="Hallway" parent="Levels" unique_id=820105770 instance_placeholder="res://scenes/levels/hallway.tscn"]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1584936411]
 script = ExtResource("2_y2edp")
