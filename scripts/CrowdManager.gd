@@ -10,14 +10,15 @@ var current_level: Node
 
 # Panic agent ratio
 @export_range(0.0, 1.0)
-var panic_ratio: float = 0.2
+var panic_ratio: float = 0.1
 
 @export_range(0.0, 1.0)
 var impatient_ratio: float = 0.5
 
-@export var max_agents: int = 200
+@export var max_agents: int = 40
 var num_agents: int = 0
 var agents: Array
+@export var debug_enabled: bool = false
 
 func _ready():
 	show_level_selection()
@@ -61,6 +62,7 @@ func _spawn_agent():
 func _initialize_agent(agent: CrowdAgent):
 	agent.set_crowd_manager(self)
 	agent.global_position = current_level.get_random_spawn()
+	agent.set_debug(debug_enabled)
 	
 	# Set panic agents
 	if randf() < impatient_ratio:
@@ -76,10 +78,16 @@ func _initialize_agent(agent: CrowdAgent):
 		#print("target unreachable. selecting new one")
 		#agent.global_position = current_level.get_random_spawn()
 
+func _input(event):
+	if event.is_action_pressed("toggleDebug"):
+		debug_enabled = !debug_enabled
+		for a in agents:
+			a.set_debug(debug_enabled)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		SelectionManager.deselect()
+
 
 func _on_agent_despawned(agent: CrowdAgent):
 	# TODO: logic here for spawning new agents; instead of on timer.

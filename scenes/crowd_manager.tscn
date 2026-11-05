@@ -7,6 +7,8 @@
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
+panic_ratio = 0.05
+impatient_ratio = 0.3
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1797879408]
 
@@ -33,7 +35,9 @@ columns = 2
 
 [node name="Levels" type="Node" parent="." unique_id=1720318990]
 
-[node name="test_hallway" parent="Levels" unique_id=820105770 instance_placeholder="res://scenes/levels/test_wallforces.tscn"]
+[node name="hallway" parent="Levels" unique_id=820105770 instance_placeholder="res://scenes/levels/hallway.tscn"]
+
+[node name="test_hallway" parent="Levels" unique_id=213032504 instance_placeholder="res://scenes/levels/test_wallforces.tscn"]
 
 [node name="test_wallforces" parent="Levels" unique_id=401714219 instance_placeholder="res://scenes/levels/test_wallforces.tscn"]
 
@@ -46,7 +50,7 @@ script = ExtResource("2_y2edp")
 input_enabled = false
 
 [node name="agent_spawn_timer" type="Timer" parent="." unique_id=619401515]
-wait_time = 0.478
+wait_time = 0.8
 
 [node name="door_toggle_timer" type="Timer" parent="." unique_id=479067285]
 wait_time = 6.524
