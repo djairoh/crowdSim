@@ -62,6 +62,13 @@ func _spawn_agent():
 
 func _initialize_agent(agent: CrowdAgent):
 	var sg = current_level.get_spawn_goal_pair()
+	# check if the spawnpoint still contains an agent; if so, cancel this spawn
+	for a in agents:
+		if a.global_position.distance_to(sg[0]) < 10:
+			agents.erase(agent)
+			agent.queue_free()
+			return
+
 	agent.set_crowd_manager(self)
 	agent.global_position = sg[0]
 	agent.set_debug(debug_enabled)

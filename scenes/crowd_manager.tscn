@@ -35,7 +35,9 @@ columns = 2
 
 [node name="Levels" type="Node" parent="." unique_id=1720318990]
 
-[node name="Vortices" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/vortices.tscn"]
+[node name="Stop and Go" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/stop_and_go.tscn"]
+
+[node name="Vortices" parent="Levels" unique_id=1726996716 instance_placeholder="res://scenes/levels/vortices.tscn"]
 
 [node name="CrossingFlow" parent="Levels" unique_id=815607310 instance_placeholder="res://scenes/levels/crossing_flow.tscn"]
 
@@ -49,7 +51,7 @@ input_enabled = false
 wait_time = 0.24
 
 [node name="door_toggle_timer" type="Timer" parent="." unique_id=479067285]
-wait_time = 6.524
+wait_time = 15.296
 one_shot = true
 
 [connection signal="timeout" from="agent_spawn_timer" to="." method="_on_agent_spawn_timer_timeout"]
