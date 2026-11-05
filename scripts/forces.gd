@@ -112,7 +112,6 @@ func _get_force_from_raycast(ray: RayCast2D) -> Vector2:
 
 func calculate_wall_avoidance():
 	# Calculate the avoidance force of the walls using 3 Raycasts.
-	# FIXME: im seeing some weird behaviours when the wall is parallel to the agent. not sure how to fix that though
 	F_wa_left  = _get_force_from_raycast(wall_left)
 	F_wa_front = _get_force_from_raycast(wall_front)
 	F_wa_right = _get_force_from_raycast(wall_right)

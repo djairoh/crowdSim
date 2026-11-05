@@ -60,8 +60,9 @@ func _spawn_agent():
 	add_child(agent)
 
 func _initialize_agent(agent: CrowdAgent):
+	var sg = current_level.get_spawn_goal_pair()
 	agent.set_crowd_manager(self)
-	agent.global_position = current_level.get_random_spawn()
+	agent.global_position = sg[0]
 	agent.set_debug(debug_enabled)
 	
 	# Set panic agents
@@ -72,11 +73,7 @@ func _initialize_agent(agent: CrowdAgent):
 	else:
 		agent.agent_state.set_normal()
 		
-	agent.request_path(current_level.get_random_goal())
-	# FIXME: agent unreachable target logic
-	#while agent.request_path(current_level.get_random_goal()) == false:
-		#print("target unreachable. selecting new one")
-		#agent.global_position = current_level.get_random_spawn()
+	agent.request_path(sg[1])
 
 func _input(event):
 	if event.is_action_pressed("toggleDebug"):

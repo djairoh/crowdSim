@@ -246,7 +246,6 @@ func _on_attraction_navigation_target_reached() -> void:
 	# Do not free queue for temporary rerouting
 	if behaviours.bottleneck_avoidance.rerouting.is_rerouting:
 		return
-	# TODO: what do when goal is reached?
 	despawned.emit(self)
 	self.queue_free()
 

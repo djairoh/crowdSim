@@ -105,7 +105,6 @@ func get_total_repulsion(update: bool = false) -> Vector2:
 	#return F_r_wa + F_r_ob + (lambda * F_r_ot)
 	
 
-# FIXME: this does not work sometimes; im seeing agents pushing *into* a wall they're right next to.
 func calculate_wall_repulsion():
 	F_r_wa = Vector2.ZERO
 	return
@@ -152,7 +151,6 @@ func calculate_wall_repulsion():
 		
 		F_r_wa += wall_repulsion
 
-# TODO: Other object repulsion. get object actual radii?
 func calculate_object_repulsion():
 	F_r_ob = Vector2.ZERO
 
@@ -250,7 +248,6 @@ func _draw():
 		parent.draw_line(Vector2(0,0), F_r_ob*10, Color.GREEN, 1.0)
 		parent.draw_line(Vector2(0,0), F_r_ot*10, Color.PURPLE, 1.0)
 	
-# TODO: Check if force from other agents is strong enough to make agents fall
 func should_fall() -> bool:
 	# minimal number of other agents
 	if agent_repulsion_forces.size() < min_agent_repulsion_count:
