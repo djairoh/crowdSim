@@ -24,10 +24,18 @@ var is_paused: bool = false
 func _ready():
 	show_level_selection()
 	
-func show_level_selection():
-	levelSelect.visible = true
-	levelSelect.setCamera(cam)
-	levelSelect.create_level_buttons(self)
+func toggle_pause_simulation():
+	is_paused = !is_paused
+	for a in agents:
+		a.set_pause(is_paused)
+	$agent_spawn_timer.paused = is_paused
+	$door_toggle_timer.paused = is_paused
+		
+func reset_simulation():
+	for a in agents:
+		a.queue_free()
+	agents = []
+	num_agents = 0
 	
 func start_simulation():
 	$agent_spawn_timer.start()
@@ -35,11 +43,21 @@ func start_simulation():
 	cam.reset()
 	cam.set_input_enabled(true)
 	
-func load_level(name: String):
+func stop_simulation():
+	$agent_spawn_timer.stop()
+	$door_toggle_timer.stop()
+	
+func show_level_selection():
+	levelSelect.visible = true
+	levelSelect.create_level_buttons(self)
+	levelSelect.setCamera(cam)
+	cam.set_input_enabled(false)
+	
+func load_level(lvl: String):
 	if current_level:
 		current_level.queue_free()
 		
-	var selected = $Levels.find_child(name, false)
+	var selected = $Levels.find_child(lvl, false)
 	if selected:
 		current_level = selected.create_instance()
 		current_level.z_index = -1 # render behind agents
@@ -51,6 +69,11 @@ func unload_level():
 		current_level.queue_free()
 		current_level = null
 	show_level_selection()
+
+func toggle_debug():
+	debug_enabled = !debug_enabled
+	for a in agents:
+		a.set_debug(debug_enabled)
 
 func _spawn_agent():
 	var agent = preload("res://scenes/crowd_agent.tscn").instantiate()
@@ -67,6 +90,7 @@ func _initialize_agent(agent: CrowdAgent):
 		if a.global_position.distance_to(sg[0]) < 10:
 			agents.erase(agent)
 			agent.queue_free()
+			num_agents = max(0, num_agents-1)
 			return
 
 	agent.set_crowd_manager(self)
@@ -85,15 +109,15 @@ func _initialize_agent(agent: CrowdAgent):
 
 func _input(event):
 	if event.is_action_pressed("toggleDebug"):
-		debug_enabled = !debug_enabled
-		for a in agents:
-			a.set_debug(debug_enabled)
+		toggle_debug()
 	if event.is_action_pressed("togglePause"):
-		is_paused = !is_paused
-		for a in agents:
-			a.set_pause(is_paused)
-		$agent_spawn_timer.paused = is_paused
-		$door_toggle_timer.paused = is_paused
+		toggle_pause_simulation()
+	if event.is_action_pressed("resetSimulation"):
+		reset_simulation()
+	if event.is_action_pressed("newLevel"):
+		stop_simulation()
+		reset_simulation()
+		unload_level()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -101,9 +125,8 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _on_agent_despawned(agent: CrowdAgent):
-	# TODO: logic here for spawning new agents; instead of on timer.
 	agents.erase(agent)
-	num_agents -= 1
+	num_agents = max(0, num_agents-1)
 
 
 func _on_agent_spawn_timer_timeout() -> void:

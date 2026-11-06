@@ -49,6 +49,9 @@ func update(delta: float) -> void:
 		parent.queue_redraw()
 
 func is_near_open_portal() -> bool:
+	if parent.crowd_manager.current_level == null:
+		return false
+		
 	var portals: Array[Vector2] = (
 		parent.crowd_manager.current_level.get_open_portal_positions()
 	)
