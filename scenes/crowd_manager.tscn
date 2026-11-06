@@ -7,9 +7,9 @@
 
 [node name="CrowdManager" type="Node2D" unique_id=1329783422]
 script = ExtResource("1_pyr1s")
-panic_ratio = 0.0
+panic_ratio = 0.045
 impatient_ratio = 0.3
-max_agents = 80
+max_agents = 100
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1797879408]
 
@@ -45,6 +45,8 @@ columns = 3
 [node name="Blocking" parent="Levels" unique_id=1031472218 instance_placeholder="res://scenes/levels/blocking.tscn"]
 
 [node name="Stop and Go" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/stop_and_go.tscn"]
+
+[node name="Turbulence" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/turbulence.tscn"]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1584936411]
 script = ExtResource("2_y2edp")

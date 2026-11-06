@@ -16,6 +16,8 @@ var portals: Array[Array] = []
 @onready var tiles = $TileMapLayer
 
 func _ready() -> void:
+	print("TileMapLayer: ", tiles)
+	print("Level: ", name)
 	goals.append_array(_get_tiles_with_property("is_goal"))
 	spawns.append_array(_get_tiles_with_property("is_spawn"))
 	_get_door_poss()
