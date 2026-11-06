@@ -46,7 +46,13 @@ columns = 3
 
 [node name="Stop and Go" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/stop_and_go.tscn"]
 
-[node name="Turbulence" parent="Levels" unique_id=1906395005 instance_placeholder="res://scenes/levels/turbulence.tscn"]
+[node name="Turbulence" parent="Levels" unique_id=1223559185 instance_placeholder="res://scenes/levels/turbulence.tscn"]
+
+[node name="test_hallway" parent="Levels" unique_id=1077048848 instance_placeholder="res://scenes/levels/test_hallway.tscn"]
+
+[node name="test_level" parent="Levels" unique_id=1085175632 instance_placeholder="res://scenes/levels/test_level.tscn"]
+
+[node name="test_wall_repulsion" parent="Levels" unique_id=1441146725 instance_placeholder="res://scenes/levels/test_wallrepulsion.tscn"]
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1584936411]
 script = ExtResource("2_y2edp")
