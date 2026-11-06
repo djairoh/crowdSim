@@ -15,6 +15,7 @@ var panic_ratio: float = 0.1
 @export_range(0.0, 1.0)
 var impatient_ratio: float = 0.5
 
+# TODO: move max_agents and both timers to the level instead, then connect here with custom signals.
 @export var max_agents: int = 40
 var num_agents: int = 0
 var agents: Array
