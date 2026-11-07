@@ -9,7 +9,7 @@ class_name Repulsion
 
 const AGENT_RADIUS: float = 6.0
 
-# Repuslion Forces
+# Repulsion Forces
 var F_r_wa: Vector2 = Vector2.ZERO
 var F_r_ob: Vector2 = Vector2.ZERO
 var F_r_ot: Vector2 = Vector2.ZERO
@@ -173,7 +173,6 @@ func calculate_object_repulsion():
 		var r_i: float = AGENT_RADIUS
 		
 		# Radii of obstacle k
-		# TODO: get an actual one
 		var r_k: float = AGENT_RADIUS
 		
 		# Calculating amount of overlap

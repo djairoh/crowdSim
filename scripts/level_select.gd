@@ -30,4 +30,4 @@ func setCamera(camera: Camera2D):
 		rect = rect.merge(children[i].get_global_rect())
 		
 	camera.global_position = rect.get_center()
-	camera.zoom = Vector2(1.5, 1.5) # FIXME: make dynamic
+	camera.zoom = Vector2(1.5, 1.5) 

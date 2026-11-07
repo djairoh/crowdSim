@@ -10,6 +10,7 @@ class_name Forces
 const PIXELS_PER_METER: float = 24
 
 # Global force weights. Paper includes these weights but does not provide the value.
+# NOTE: we use best-guess values instead
 const W_AT: float = 1.0
 const W_WA: float = 1.2
 const W_OB: float = 0.2
@@ -252,7 +253,6 @@ func calculate_attraction():
 	# base navigation
 	F_at = parent.desired_velocity.normalized()
 	
-# TODO: Fix avoiding corpse
 func get_falling_agent_force()-> Vector2:
 	var v_i: Vector2 = parent.desired_velocity
 	

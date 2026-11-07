@@ -1,5 +1,3 @@
-<!-- TODO: write up rest of readme -->
-
 <br/>
 <div align="center">
   <p align="center">
@@ -12,13 +10,20 @@
 ## Table of Contents
 
 * [About the Project](#about) 
+* [Layout](#layout)
 * [Dependencies](#dependencies)
 * [Usage](#usage)
 
 
 ## About
+This repository contains the Godot code which reimplements
 Code for a crowd simulator developed as part of the Modelling and Simulation course at the RUG
 
-## Installation
+
+## Layout
+
+
+## Dependencies
+
 
 ## Usage
