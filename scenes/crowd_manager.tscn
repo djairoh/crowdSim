@@ -22,6 +22,7 @@ theme_override_font_sizes/font_size = 48
 script = ExtResource("4_8dgo1")
 
 [node name="AgentCounter" type="Label" parent="CanvasLayer" unique_id=7839214]
+visible = false
 offset_left = 16.0
 offset_top = 37.0
 offset_right = 98.0
