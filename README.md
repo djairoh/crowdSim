@@ -14,7 +14,8 @@
 
 
 ## About
-This repository contains the Godot code which reimplements the HiDAC crowd simulation model in Godot.
+This repository contains the Godot code which reimplements the HiDAC<sup>[1](#footnote1)</sup> crowd simulation model in Godot.
+
 Ths project was developed as part of the Modelling and Simulation course at the RUG.
 
 
@@ -38,3 +39,7 @@ Inside the simulation there are a few (non intuitive) keybinds. These are outlin
 | MouseWheel      | Camera zoom              |
 | MiddleMouseDrag | Camera position          |
 ----------------------------------------------
+
+
+
+<a name="footnote1">1</a>: Allbeck, Jan M., Nuria Pelechano, and Norman I. Badler. "Controlling individual agents in high-density crowd simulation." Proceedings of the 2007 ACM SIGGRAPH/Eurographics symposium on Computer animation. No. 210. 2007.
