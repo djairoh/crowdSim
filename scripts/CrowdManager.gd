@@ -15,23 +15,44 @@ var panic_ratio: float = 0.1
 @export_range(0.0, 1.0)
 var impatient_ratio: float = 0.5
 
-# TODO: move max_agents and both timers to the level instead, then connect here with custom signals.
 @export var max_agents: int = 40
 var num_agents: int = 0
 var agents: Array
 @export var debug_enabled: bool = false
+
 var is_paused: bool = false
 
+var frames = 0
+const LOG_PATH := "user://game.log"
+func log_message(msg: String) -> void:
+	var mode = FileAccess.READ_WRITE if FileAccess.file_exists(LOG_PATH) else FileAccess.WRITE
+	var file = FileAccess.open(LOG_PATH, mode)
+	if file == null:
+		push_error("Could not open log: %s" % error_string(FileAccess.get_open_error()))
+		return
+	file.seek_end()
+	file.store_line(msg)
+	file.close()
+	
+	
 func _ready():
 	show_level_selection()
 	
+
+func _process(delta: float) -> void:
+	frames += 1
+	log_message("%s %s %s" % [frames, Engine.get_frames_per_second(), num_agents])
+	$CanvasLayer/AgentCounter.text = "Agents: %s" % num_agents
+
+
 func toggle_pause_simulation():
 	is_paused = !is_paused
 	for a in agents:
 		a.set_pause(is_paused)
 	$agent_spawn_timer.paused = is_paused
 	$door_toggle_timer.paused = is_paused
-		
+
+
 func reset_simulation():
 	for a in agents:
 		a.queue_free()
